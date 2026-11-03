@@ -1,8 +1,7 @@
 import os
 import pandas as pd
 import streamlit as st
-from datetime import datetime
-import pytz
+from datetime import datetime, timedelta, timezone
 
 DATA_FILE = "canciones_dedicadas.csv"
 
@@ -311,9 +310,9 @@ def cargar_canciones():
 def guardar_cancion(autor, titulo, artista, enlace, mensaje):
     df = cargar_canciones()
     
-    # Configurar la zona horaria de Colombia (Bogota) para guardar hora exacta con AM/PM
-    tz_colombia = pytz.timezone('America/Bogota')
-    fecha_actual = datetime.now(tz_colombia).strftime("%d/%m/%Y %I:%M %p")
+    # Hora de Colombia (UTC-5) de forma nativa sin dependencias externas
+.    colombia_tz = timezone(timedelta(hours=-5))
+    fecha_actual = datetime.now(colombia_tz).strftime("%d/%m/%Y %I:%M %p")
     
     nueva_fila = pd.DataFrame([[0, autor, titulo, artista, fecha_actual, enlace if enlace else "", mensaje if mensaje else ""]], 
                               columns=["N°", "Autor", "Título", "Artista", "Fecha", "Enlace", "Mensaje"])
@@ -401,7 +400,7 @@ with menu[1]:
     df = cargar_canciones()
     
     if not df.empty:
-        # LÓGICA DE FILTRADO CORREGIDA
+        # LÓGICA DE FILTRADO
         if "Ver todas" in filtro:
             df_filtrado = df
         elif "🐥" in filtro:

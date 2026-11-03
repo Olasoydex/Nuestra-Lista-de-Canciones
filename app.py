@@ -392,7 +392,7 @@ with menu[1]:
         </div>
     """, unsafe_allow_html=True)
     
-    filtro = st.radio("Filtrar Lista", ["Mis canciones 🐥(Dedicatorias para Tali)", "Mis canciones 💝(Dedicatorias para Puente)", "Ver todas juntas 🐥♥"])
+    filtro = st.radio("Filtrar Lista", ["Mis canciones 🐥(Dedicatorias para Tali)", "Mis canciones 💝(Dedicatorias para Puente)", "Ver todas juntas 🐥💝"])
     
     df = cargar_canciones()
     

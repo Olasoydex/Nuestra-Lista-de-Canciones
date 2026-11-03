@@ -1,4 +1,5 @@
 import re
+import time
 import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta, timezone
@@ -285,10 +286,22 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+@st.cache_data(ttl=30, show_spinner=False)
+def _leer_sheet(version):
+    """Descarga el CSV. Se guarda en caché 30 s; 'version' fuerza una descarga nueva."""
+    return pd.read_csv(f"{SHEET_URL}&_={version}")
+
+
+def refrescar_datos():
+    """Limpia la caché para que la próxima lectura traiga datos nuevos del Sheet."""
+    st.cache_data.clear()
+    st.session_state["version"] = time.time()
+
+
 def cargar_canciones():
     """Lee las canciones del Google Sheet. Si falla, muestra el error real."""
     try:
-        df = pd.read_csv(SHEET_URL)
+        df = _leer_sheet(st.session_state.get("version", 0)).copy()
         df.columns = [str(c).strip() for c in df.columns]
 
         # Si no encuentra la columna Título, los encabezados del Sheet no se leyeron bien
@@ -334,8 +347,8 @@ def guardar_cancion(autor, titulo, artista, enlace, mensaje):
         return False
 
 
-def eliminar_cancion(num):
-    row_index = int(num) + 1
+def eliminar_cancion(row_index):
+    """row_index = número de fila real en el Google Sheet (la fila 1 son los encabezados)."""
     payload = {
         "action": "delete",
         "rowIndex": row_index
@@ -370,9 +383,10 @@ st.markdown("""
     </p>
 """, unsafe_allow_html=True)
 
-menu = st.tabs(["Registrar una canción", "Ver y escuchar nuestras listas"])
+opciones = ["Registrar una canción", "Ver y escuchar nuestras listas"]
+vista = st.radio("Sección", opciones, key="vista", horizontal=True, label_visibility="collapsed")
 
-with menu[0]:
+if vista == opciones[0]:
     with st.form("registro_form", clear_on_submit=True):
         st.markdown("<h3 style='color: #fde047; margin-top: 0;'>Registrar una canción</h3>", unsafe_allow_html=True)
 
@@ -396,7 +410,10 @@ with menu[0]:
 
         if submitted:
             if titulo and artista:
-                if guardar_cancion(autor, titulo, artista, enlace, mensaje):
+                with st.spinner("Guardando tu canción... 🎶"):
+                    guardado = guardar_cancion(autor, titulo, artista, enlace, mensaje)
+                if guardado:
+                    refrescar_datos()
                     st.session_state["mensaje_ok"] = f"¡Canción '{titulo}' registrada con éxito! ✨"
                     st.rerun()
                 else:
@@ -404,7 +421,7 @@ with menu[0]:
             else:
                 st.error("Por favor, llena al menos el título y el artista.")
 
-with menu[1]:
+else:
     st.markdown('<div class="marco-contenido">', unsafe_allow_html=True)
     st.markdown("<h3 style='color: #fde047; margin-top: 0;'>Ver y escuchar nuestras listas</h3>", unsafe_allow_html=True)
 
@@ -491,7 +508,10 @@ with menu[1]:
 
             st.markdown("---")
             if st.button("Eliminar esta canción"):
-                if eliminar_cancion(int(num_seleccionado)):
+                with st.spinner("Eliminando... 🗑️"):
+                    eliminado = eliminar_cancion(int(fila.name) + 2)
+                if eliminado:
+                    refrescar_datos()
                     st.session_state["mensaje_aviso"] = f"Canción N° {num_seleccionado} eliminada correctamente."
                     st.rerun()
                 else:

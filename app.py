@@ -419,7 +419,7 @@ if vista == opciones[0]:
                 else:
                     st.error("No se pudo guardar la canción. Intenta de nuevo.")
             else:
-                st.error("Por favor, llena al menos el título y el artista.")
+                st.error("Mínimo tienes que poner título y artista.")
 
 else:
     st.markdown('<div class="marco-contenido">', unsafe_allow_html=True)
@@ -508,7 +508,7 @@ else:
 
             st.markdown("---")
             if st.button("Eliminar esta canción"):
-                with st.spinner("Eliminando... 🗑️"):
+                with st.spinner("Eliminando... "):
                     eliminado = eliminar_cancion(int(fila.name) + 2)
                 if eliminado:
                     refrescar_datos()

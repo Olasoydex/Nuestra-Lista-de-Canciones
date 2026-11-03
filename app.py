@@ -8,7 +8,7 @@ DATA_FILE = "canciones_dedicadas.csv"
 # Configuración de la página
 st.set_page_config(page_title="Lista de Canciones 🐥💖", page_icon="🎵", layout="centered")
 
-# Estilos CSS estrictos con selectores específicos de Streamlit
+# Estilos CSS avanzados: Tonos morados claros, notas cayendo, videocasete y tabla estilizada
 st.markdown("""
     <style>
     /* Fondo general morado */
@@ -37,7 +37,7 @@ st.markdown("""
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-bottom: 15px;
+        margin-bottom: 10px;
     }
     .lp-record {
         width: 130px;
@@ -71,26 +71,131 @@ st.markdown("""
         transform: translate(-50%, -50%);
     }
 
-    /* Forzar que TODOS los inputs y textareas (cuadro grande de dedicatoria) sean morados con borde amarillo */
-    input, textarea, div[data-baseweb="input"], div[data-baseweb="textarea"], div[data-baseweb="base-input"] {
+    /* Animación de notas musicales "lloviendo" en el cuadro vacío */
+    @keyframes fall {
+        0% { transform: translateY(-20px); opacity: 0; }
+        50% { opacity: 1; }
+        100% { transform: translateY(50px); opacity: 0; }
+    }
+    .rain-container {
+        position: relative;
+        height: 80px;
+        border: 3px solid #fde047;
+        border-radius: 15px;
+        background: linear-gradient(135deg, #3b0764, #4c1d95);
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        overflow: hidden;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 15px rgba(253, 224, 71, 0.2);
+    }
+    .note {
+        position: absolute;
+        font-size: 22px;
+        animation: fall 3s infinite linear;
+    }
+    .note:nth-child(1) { left: 15%; animation-delay: 0s; }
+    .note:nth-child(2) { left: 35%; animation-delay: 1s; }
+    .note:nth-child(3) { left: 55%; animation-delay: 0.5s; }
+    .note:nth-child(4) { left: 75%; animation-delay: 1.5s; }
+    .note:nth-child(5) { left: 90%; animation-delay: 0.8s; }
+
+    /* Videocasete CSS en el centro (estilo LP) */
+    .vhs-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 20px 0;
+    }
+    .vhs-tape {
+        width: 220px;
+        height: 130px;
+        background: linear-gradient(135deg, #4c1d95, #3b0764);
+        border: 4px solid #fde047;
+        border-radius: 12px;
+        position: relative;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .vhs-label {
+        width: 150px;
+        height: 45px;
+        background: #fde047;
+        border-radius: 6px;
+        position: absolute;
+        top: 12px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #2e1065;
+        font-weight: bold;
+        font-size: 13px;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .vhs-reels {
+        display: flex;
+        gap: 50px;
+        position: absolute;
+        bottom: 20px;
+    }
+    .reel {
+        width: 35px;
+        height: 35px;
+        background: #1e1b4b;
+        border: 3px solid #fde047;
+        border-radius: 50%;
+        position: relative;
+    }
+    .reel::after {
+        content: '';
+        width: 12px;
+        height: 12px;
+        background: #f59e0b;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+    }
+
+    /* Forzar tonos morados claros y eliminar blanco en tablas y contenedores */
+    div[data-testid="stDataFrame"], .stDataFrame {
+        background-color: #3b0764 !important;
+        border: 2px solid #fde047 !important;
+        border-radius: 10px !important;
+        padding: 5px;
+    }
+    
+    /* Celdas y cabeceras de tablas en tonos morados claros */
+    table, th, td, tr {
+        background-color: #3b0764 !important;
+        color: #fef08a !important;
+        border-color: #7c3aed !important;
+    }
+    th {
+        background-color: #4c1d95 !important;
+        color: #fde047 !important;
+    }
+
+    /* Inputs, textareas y botones */
+    input, textarea, div[data-baseweb="input"], div[data-baseweb="textarea"] {
         background-color: #3b0764 !important;
         color: #fde047 !important;
         border-radius: 8px !important;
     }
-
     .stTextInput input, .stTextArea textarea {
         border: 2px solid #fde047 !important;
         color: #fde047 !important;
         background-color: #3b0764 !important;
     }
-
-    /* Placeholder / Texto de ejemplo amarillo */
     input::placeholder, textarea::placeholder {
         color: #fde047 !important;
         opacity: 0.8 !important;
     }
 
-    /* Botón principal dentro y fuera del formulario (evitar fondo blanco) */
     .stButton > button, div[data-testid="stFormSubmitButton"] > button {
         background: linear-gradient(135deg, #f59e0b, #7c3aed) !important;
         color: #ffffff !important;
@@ -101,17 +206,16 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4) !important;
         width: 100% !important;
     }
-
-    .stButton > button:hover, div[data-testid="stFormSubmitButton"] > button:hover {
+    .stButton > button:hover {
         background: linear-gradient(135deg, #d97706, #6d28d9) !important;
     }
 
-    /* Marco bordado dorado alrededor del contenido */
+    /* Marco bordado dorado continuo */
     [data-testid="stForm"], .marco-contenido {
         border: 3px solid #fde047 !important;
         border-radius: 15px !important;
         padding: 25px !important;
-        background-color: #240c50 !important;
+        background-color: #3b0764 !important;
         box-shadow: 0 8px 25px rgba(0,0,0,0.4) !important;
     }
 
@@ -122,7 +226,7 @@ st.markdown("""
         border-bottom: none;
     }
     .stTabs [data-baseweb="tab"] {
-        background-color: #3b0764;
+        background-color: #4c1d95;
         border: 2px solid #fde047 !important;
         border-bottom: none !important;
         border-radius: 10px 10px 0 0 !important;
@@ -131,14 +235,14 @@ st.markdown("""
         padding: 10px 20px;
     }
     .stTabs [aria-selected="true"] {
-        background-color: #240c50 !important;
+        background-color: #3b0764 !important;
         border-top: 4px solid #fde047 !important;
         color: #ffffff !important;
     }
 
-    /* Tarjetas de visualización */
+    /* Tarjetas de visualización en tonos morados claros */
     .card-yellow {
-        background-color: #422006;
+        background-color: #4c1d95;
         border-left: 6px solid #fde047;
         border-right: 2px solid #f59e0b;
         padding: 18px;
@@ -194,7 +298,7 @@ def eliminar_cancion(num):
     df.to_csv(DATA_FILE, index=False)
     return f"Canción N° {num} eliminada correctamente."
 
-# Cabecera con Disco LP girando y textos principales
+# Cabecera con Disco LP girando y tus textos originales
 st.markdown("""
     <div class="lp-container">
         <div class="lp-record">
@@ -214,6 +318,18 @@ menu = st.tabs(["Registrar una canción", "Ver y escuchar nuestras listas"])
 with menu[0]:
     with st.form("registro_form", clear_on_submit=True):
         st.markdown("<h3 style='color: #fde047; margin-top: 0;'>Registrar una canción</h3>", unsafe_allow_html=True)
+        
+        # Cuadro amarillo con lluvia de notas musicales animadas
+        st.markdown("""
+            <div class="rain-container">
+                <div class="note">🎵</div>
+                <div class="note">🎶</div>
+                <div class="note">🎼</div>
+                <div class="note">🎵</div>
+                <div class="note">🎶</div>
+            </div>
+        """, unsafe_allow_html=True)
+        
         autor = st.radio("¿Quién está registrando la canción?", ["Santiago 🐥(Para Tali)", "Taliana 💖(Para Puente)"])
         titulo = st.text_input("Título de la canción", placeholder="Ej. IMU")
         artista = st.text_input("Artista", placeholder="Ej. Jorge Cuellar")
@@ -232,6 +348,18 @@ with menu[0]:
 with menu[1]:
     st.markdown('<div class="marco-contenido">', unsafe_allow_html=True)
     st.markdown("<h3 style='color: #fde047; margin-top: 0;'>Ver y escuchar nuestras listas</h3>", unsafe_allow_html=True)
+    
+    # Cuadro amarillo con lluvia de notas musicales en la segunda pestaña también
+    st.markdown("""
+        <div class="rain-container">
+            <div class="note">🎵</div>
+            <div class="note">🎶</div>
+            <div class="note">🎼</div>
+            <div class="note">🎵</div>
+            <div class="note">🎶</div>
+        </div>
+    """, unsafe_allow_html=True)
+    
     filtro = st.radio("Filtrar Lista", ["Mis canciones 🐥(Dedicatorias para Tali)", "Mis canciones 💖(Dedicatorias para Puente)", "Ver todas juntas 🐥💖"])
     
     df = cargar_canciones()
@@ -249,6 +377,20 @@ with menu[1]:
         if not df_filtrado.empty:
             st.markdown("---")
             st.markdown("<h3 style='color: #fde047;'>Reproductor y detalles</h3>", unsafe_allow_html=True)
+            
+            # Videocasete decorativo en el centro (estilo LP)
+            st.markdown("""
+                <div class="vhs-container">
+                    <div class="vhs-tape">
+                        <div class="vhs-label">VIDEO CASSETTE</div>
+                        <div class="vhs-reels">
+                            <div class="reel"></div>
+                            <div class="reel"></div>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
             num_seleccionado = st.selectbox("Selecciona el número (N°) de la canción para consultar:", df_filtrado["N°"].tolist())
             
             fila = df[df["N°"] == num_seleccionado].iloc[0]

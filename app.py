@@ -8,7 +8,7 @@ DATA_FILE = "canciones_dedicadas.csv"
 # Configuración de la página
 st.set_page_config(page_title="Lista de Canciones 🐥💖", page_icon="🎵", layout="centered")
 
-# Estilos CSS con notas musicales cayendo, videocasete detallado y tabla en morado suave
+# Estilos CSS
 st.markdown("""
     <style>
     /* Fondo general morado */
@@ -120,7 +120,6 @@ st.markdown("""
         justify-content: center;
         align-items: center;
     }
-    /* Tornillos decorativos en las esquinas del casete */
     .vhs-screw {
         width: 8px;
         height: 8px;
@@ -205,7 +204,6 @@ st.markdown("""
         color: #fef08a !important;
         border-bottom: 1px solid #7c3aed !important;
     }
-    /* Eliminar cualquier contenedor blanco heredado de celdas */
     div[data-testid="stDataFrame"] div, table * {
         background-color: transparent !important;
         color: #fef08a !important;
@@ -332,7 +330,7 @@ def eliminar_cancion(num):
     df.to_csv(DATA_FILE, index=False)
     return f"Canción N° {num} eliminada correctamente."
 
-# Cabecera con Disco LP girando y tus textos originales
+# Cabecera con Disco LP girando
 st.markdown("""
     <div class="lp-container">
         <div class="lp-record">
@@ -383,7 +381,7 @@ with menu[1]:
     st.markdown('<div class="marco-contenido">', unsafe_allow_html=True)
     st.markdown("<h3 style='color: #fde047; margin-top: 0;'>Ver y escuchar nuestras listas</h3>", unsafe_allow_html=True)
     
-    # Cuadro con lluvia de notas musicales en la segunda pestaña también
+    # Cuadro con lluvia de notas musicales
     st.markdown("""
         <div class="rain-container">
             <div class="note">🎵</div>
@@ -399,10 +397,11 @@ with menu[1]:
     df = cargar_canciones()
     
     if not df.empty:
-        if "Santiago" in filtro:
-            df_filtrado = df[df["Autor"] == "Santiago 🐥(Para Tali)"]
-        elif "Taliana" in filtro or "Puente" in filtro:
-            df_filtrado = df[df["Autor"] == "Taliana 💖(Para Puente)"]
+        # CORRECCIÓN CLAVE EN EL FILTRADO
+        if "🐥" in filtro:
+            df_filtrado = df[df["Autor"].str.contains("Santiago", case=False, na=False)]
+        elif "💖" in filtro and "Ver todas" not in filtro:
+            df_filtrado = df[df["Autor"].str.contains("Taliana", case=False, na=False)]
         else:
             df_filtrado = df
             

@@ -6,9 +6,12 @@ import requests
 # Configuración de la página
 st.set_page_config(page_title="Lista de Canciones 🐥💝", page_icon="🎵", layout="centered")
 
-SHEET_ID = "1qjGA_JLcrJgDM8QUHTIdRsOszOukowgCtws-qZPpK"
+# ID del Google Sheet: copiarlo EXACTO de la URL (entre /d/ y /edit)
+SHEET_ID = "1qjGA_JLcrJGd8MQ8UHTIdRsOszOukowgCtws-qZzPpk"
 SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv"
 WEB_APP_URL = "https://script.google.com/macros/s/AKfycbww1XIydnPRQvIZbbecLhBaSD7c4OEQgyJa-wpXryeAk6XaT7YXcbR08SpICqptfQim/exec"
+
+EXPECTED_COLS = ["N°", "Autor", "Título", "Artista", "Fecha", "Enlace", "Mensaje"]
 
 # Estilos CSS
 st.markdown("""
@@ -275,25 +278,40 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+
 def cargar_canciones():
-    expected_cols = ["N°", "Autor", "Título", "Artista", "Fecha", "Enlace", "Mensaje"]
+    """Lee las canciones del Google Sheet. Si falla, muestra el error real."""
     try:
         df = pd.read_csv(SHEET_URL)
         df.columns = [str(c).strip() for c in df.columns]
-        
-        for col in expected_cols:
+
+        # Si no encuentra la columna Título, los encabezados del Sheet no se leyeron bien
+        if "Título" not in df.columns:
+            st.error(
+                "No encontré la columna 'Título'. Revisa que la fila 1 del Sheet tenga: "
+                "N°, Autor, Título, Artista, Fecha, Enlace, Mensaje. "
+                f"Columnas leídas: {list(df.columns)}"
+            )
+            return pd.DataFrame(columns=EXPECTED_COLS)
+
+        for col in EXPECTED_COLS:
             if col not in df.columns:
                 df[col] = ""
-                
+
         df = df.dropna(subset=["Título"])
         return df
-    except Exception:
-        return pd.DataFrame(columns=expected_cols)
+    except Exception as e:
+        st.error(
+            f"No se pudo leer el Google Sheet. Verifica el SHEET_ID y que esté compartido "
+            f"como 'Cualquier persona con el enlace → Lector'. Detalle: {e}"
+        )
+        return pd.DataFrame(columns=EXPECTED_COLS)
+
 
 def guardar_cancion(autor, titulo, artista, enlace, mensaje):
     colombia_tz = timezone(timedelta(hours=-5))
     fecha_actual = datetime.now(colombia_tz).strftime("%d/%m/%Y %I:%M %p")
-    
+
     payload = {
         "autor": autor,
         "titulo": titulo,
@@ -303,9 +321,12 @@ def guardar_cancion(autor, titulo, artista, enlace, mensaje):
         "mensaje": mensaje if mensaje else ""
     }
     try:
-        requests.post(WEB_APP_URL, json=payload)
+        r = requests.post(WEB_APP_URL, json=payload, timeout=20)
+        return r.ok
     except Exception as e:
-        print(f"Error: {e}")
+        st.error(f"Error al guardar: {e}")
+        return False
+
 
 def eliminar_cancion(num):
     row_index = int(num) + 1
@@ -314,9 +335,19 @@ def eliminar_cancion(num):
         "rowIndex": row_index
     }
     try:
-        requests.post(WEB_APP_URL, json=payload)
+        r = requests.post(WEB_APP_URL, json=payload, timeout=20)
+        return r.ok
     except Exception as e:
-        print(f"Error al eliminar: {e}")
+        st.error(f"Error al eliminar: {e}")
+        return False
+
+
+# Mensajes que sobreviven al st.rerun()
+if "mensaje_ok" in st.session_state:
+    st.success(st.session_state.pop("mensaje_ok"))
+    st.balloons()
+if "mensaje_aviso" in st.session_state:
+    st.warning(st.session_state.pop("mensaje_aviso"))
 
 # Cabecera con Disco LP girando
 st.markdown("""
@@ -338,7 +369,7 @@ menu = st.tabs(["Registrar una canción", "Ver y escuchar nuestras listas"])
 with menu[0]:
     with st.form("registro_form", clear_on_submit=True):
         st.markdown("<h3 style='color: #fde047; margin-top: 0;'>Registrar una canción</h3>", unsafe_allow_html=True)
-        
+
         st.markdown("""
             <div class="rain-container">
                 <div class="note">🎵</div>
@@ -348,28 +379,29 @@ with menu[0]:
                 <div class="note">🎶</div>
             </div>
         """, unsafe_allow_html=True)
-        
+
         autor = st.radio("¿Quién está registrando la canción?", ["Santiago 🐥", "Taliana 💝"])
         titulo = st.text_input("Título de la canción", placeholder="Ej. IMU")
         artista = st.text_input("Artista", placeholder="Ej. Jorge Cuellar")
         enlace = st.text_input("Enlace de YouTube (Opcional)", placeholder="Link de la canción")
         mensaje = st.text_area("Mensaje o dedicatoria", placeholder="¿Qué te recuerda de mí esta canción? (Opcional)")
-        
+
         submitted = st.form_submit_button("Registrar Canción")
-        
+
         if submitted:
             if titulo and artista:
-                guardar_cancion(autor, titulo, artista, enlace, mensaje)
-                st.success(f"¡Canción '{titulo}' registrada con éxito y guardada en Google Sheets! ✨")
-                st.balloons()
-                st.rerun()
+                if guardar_cancion(autor, titulo, artista, enlace, mensaje):
+                    st.session_state["mensaje_ok"] = f"¡Canción '{titulo}' registrada con éxito! ✨"
+                    st.rerun()
+                else:
+                    st.error("No se pudo guardar la canción. Intenta de nuevo.")
             else:
                 st.error("Por favor, llena al menos el título y el artista.")
 
 with menu[1]:
     st.markdown('<div class="marco-contenido">', unsafe_allow_html=True)
     st.markdown("<h3 style='color: #fde047; margin-top: 0;'>Ver y escuchar nuestras listas</h3>", unsafe_allow_html=True)
-    
+
     st.markdown("""
         <div class="rain-container">
             <div class="note">🎵</div>
@@ -379,27 +411,27 @@ with menu[1]:
             <div class="note">🎶</div>
         </div>
     """, unsafe_allow_html=True)
-    
+
     filtro = st.radio("Filtrar Lista", ["Mis canciones 🐥 (Dedicatorias para Tali)", "Mis canciones 💝 (Dedicatorias para Puente)", "Ver todas juntas 🐥💝"])
-    
+
     df = cargar_canciones()
-    
+
     if not df.empty:
         if "Ver todas" in filtro:
             df_filtrado = df
         elif "🐥" in filtro:
-            df_filtrado = df[df["Autor"].str.contains("Santiago", case=False, na=False)]
+            df_filtrado = df[df["Autor"].astype(str).str.contains("Santiago", case=False, na=False)]
         elif "💝" in filtro:
-            df_filtrado = df[df["Autor"].str.contains("Taliana", case=False, na=False)]
+            df_filtrado = df[df["Autor"].astype(str).str.contains("Taliana", case=False, na=False)]
         else:
             df_filtrado = df
-            
+
         if not df_filtrado.empty:
             st.dataframe(df_filtrado[["N°", "Autor", "Título", "Artista", "Fecha"]], use_container_width=True)
-            
+
             st.markdown("---")
             st.markdown("<h3 style='color: #fde047;'>Reproductor y detalles</h3>", unsafe_allow_html=True)
-            
+
             st.markdown("""
                 <div class="vhs-container">
                     <div class="vhs-tape">
@@ -415,37 +447,49 @@ with menu[1]:
                     </div>
                 </div>
             """, unsafe_allow_html=True)
-            
-            num_seleccionado = st.selectbox("Selecciona el número (N°) de la canción para consultar:", df_filtrado["N°"].tolist())
-            
+
+            num_seleccionado = st.selectbox(
+                "Selecciona el número (N°) de la canción para consultar:",
+                df_filtrado["N°"].tolist()
+            )
+
             fila = df[df["N°"] == num_seleccionado].iloc[0]
-            
+
             clase_tarjeta = "card-yellow" if "Santiago" in str(fila['Autor']) else "card-purple"
-            
+
+            mensaje_fila = str(fila["Mensaje"]) if pd.notna(fila["Mensaje"]) else ""
+            bloque_mensaje = (
+                f'<p style="margin: 10px 0 0 0; color: #fef08a;"><b>Dedicatoria:</b> {mensaje_fila}</p>'
+                if mensaje_fila.strip() not in ("", "nan") else ""
+            )
+
             st.markdown(f"""
                 <div class="{clase_tarjeta}">
                     <h3 style="margin: 0; color: #fde047;">{fila['Título']} — {fila['Artista']}</h3>
                     <p style="margin: 5px 0 0 0; color: #fef08a;"><b>Registrada por:</b> {fila['Autor']} | <b>Fecha:</b> {fila['Fecha']}</p>
+                    {bloque_mensaje}
                 </div>
             """, unsafe_allow_html=True)
-            
+
             link = str(fila["Enlace"]) if pd.notna(fila["Enlace"]) else ""
             if "youtube.com/watch?v=" in link:
                 yt_id = link.split("v=")[1].split("&")[0]
                 st.video(f"https://www.youtube.com/watch?v={yt_id}")
             elif "youtu.be/" in link:
                 yt_id = link.split("youtu.be/")[1].split("?")[0]
-                st.video(f"https://www.youtu.be/{yt_id}")
-            elif link.strip() != "":
+                st.video(f"https://www.youtube.com/watch?v={yt_id}")
+            elif link.strip() not in ("", "nan"):
                 st.markdown(f"[Abrir enlace externo de audio]({link})")
             else:
                 st.info("Esta canción no tiene el link adjunto :(")
-                
+
             st.markdown("---")
             if st.button("Eliminar esta canción"):
-                eliminar_cancion(int(num_seleccionado))
-                st.warning(f"Canción N° {num_seleccionado} eliminada correctamente.")
-                st.rerun()
+                if eliminar_cancion(int(num_seleccionado)):
+                    st.session_state["mensaje_aviso"] = f"Canción N° {num_seleccionado} eliminada correctamente."
+                    st.rerun()
+                else:
+                    st.error("No se pudo eliminar la canción. Intenta de nuevo.")
         else:
             st.info("No hay canciones para este filtro todavía.")
     else:

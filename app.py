@@ -1,14 +1,15 @@
 import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta, timezone
-import urllib.parse
+import requests
 
 # Configuración de la página
 st.set_page_config(page_title="Lista de Canciones 🐥💝", page_icon="🎵", layout="centered")
 
-# Tu ID de Google Sheet extraído de tu enlace (la parte larga entre /d/ y /edit)
+# Tu ID de Google Sheet y la URL del Web App de Apps Script que me proporcionaste
 SHEET_ID = "1qjGA_JLcrJgDM8QUHTIdRsOszOukowgCtws-qZPpK"
 SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv"
+WEB_APP_URL = "https://script.google.com/macros/s/AKfycbww1XIydnPRQvIZbbecLhBaSD7c4OEQgyJa-wpXryeAk6XaT7YXcbR08SpICqptfQim/exec"
 
 # Estilos CSS
 st.markdown("""
@@ -275,7 +276,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Función para cargar datos desde Google Sheets vía CSV público
 def cargar_canciones():
     expected_cols = ["N°", "Autor", "Título", "Artista", "Fecha", "Enlace", "Mensaje"]
     try:
@@ -283,22 +283,28 @@ def cargar_canciones():
         for col in expected_cols:
             if col not in df.columns:
                 return pd.DataFrame(columns=expected_cols)
-        # Limpiar filas vacías si las hay
         df = df.dropna(subset=["Título"])
         return df
     except Exception:
         return pd.DataFrame(columns=expected_cols)
 
-# Mensaje de ayuda para el registro (enlace web directo para rellenar el Google Sheet de forma automática)
-def guardar_cancion_web(autor, titulo, artista, enlace, mensaje):
+def guardar_cancion(autor, titulo, artista, enlace, mensaje):
     colombia_tz = timezone(timedelta(hours=-5))
     fecha_actual = datetime.now(colombia_tz).strftime("%d/%m/%Y %I:%M %p")
-    df = cargar_canciones()
-    nuevo_num = len(df) + 1
     
-    # Enlace directo de Google Forms o interfaz de Google Sheets pre-rellena
-    form_url = f"https://docs.google.com/forms/d/e/1FAIpQLSd.../viewform" # O usando un enlace de inserción directa
-    return True
+    payload = {
+        "autor": autor,
+        "titulo": titulo,
+        "artista": artista,
+        "fecha": fecha_actual,
+        "enlace": enlace if enlace else "",
+        "mensaje": mensaje if mensaje else ""
+    }
+    
+    try:
+        requests.post(WEB_APP_URL, json=payload)
+    except Exception as e:
+        print(f"Error: {e}")
 
 # Cabecera con Disco LP girando
 st.markdown("""
@@ -341,19 +347,10 @@ with menu[0]:
         
         if submitted:
             if titulo and artista:
-                colombia_tz = timezone(timedelta(hours=-5))
-                fecha_actual = datetime.now(colombia_tz).strftime("%d/%m/%Y %I:%M %p")
-                
-                # Generar enlace automático para añadir a Google Sheets con un clic
-                query_params = {
-                    "entry.1": autor,
-                    "entry.2": titulo,
-                    "entry.3": artista,
-                    "entry.4": enlace,
-                    "entry.5": mensaje
-                }
-                st.success(f"¡Canción '{titulo}' lista! Para que quede guardada de por vida en tu Google Sheet automáticamente, puedes visualizarla abajo o ingresarla directamente en tu tabla.")
+                guardar_cancion(autor, titulo, artista, enlace, mensaje)
+                st.success(f"¡Canción '{titulo}' registrada yeeei! Se ha guardado en tu Google Sheet para siempre ✨")
                 st.balloons()
+                st.rerun()
             else:
                 st.error("Por favor, llena al menos el título y el artista.")
 
@@ -433,5 +430,5 @@ with menu[1]:
             else:
                 st.info("Esta canción no tiene el link adjunto :(")
     else:
-        st.info("Tu Google Sheet está conectado. Añade tu primera canción directamente en la hoja de Google Sheets y aparecerá aquí automáticamente para siempre.")
+        st.info("No hay canciones registradas todavía. ¡Registra la primera desde la pestaña de arriba!")
     st.markdown('</div>', unsafe_allow_html=True)

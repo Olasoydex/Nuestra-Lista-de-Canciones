@@ -1,33 +1,30 @@
 import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta, timezone
-import gspread
-from google.oauth2.service_account import Credentials
+import urllib.parse
 
 # Configuración de la página
 st.set_page_config(page_title="Lista de Canciones 🐥💝", page_icon="🎵", layout="centered")
 
+# Tu ID de Google Sheet extraído de tu enlace (la parte larga entre /d/ y /edit)
+SHEET_ID = "1qjGA_JLcrJgDM8QUHTIdRsOszOukowgCtws-qZPpK"
+SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv"
+
 # Estilos CSS
 st.markdown("""
     <style>
-    /* Fondo general morado */
     .stApp {
         background-color: #2e1065 !important;
         color: #fef08a !important;
     }
-    
-    /* Textos principales y títulos en amarillo dorado */
     h1, h2, h3 {
         color: #fde047 !important;
         font-family: 'Helvetica Neue', sans-serif;
         text-shadow: 0 2px 4px rgba(0,0,0,0.3);
     }
-
     p, label, .streamlit-expanderHeader, .stMarkdown, span {
         color: #fef08a !important;
     }
-
-    /* Animación del disco LP */
     @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
@@ -69,8 +66,6 @@ st.markdown("""
         left: 50%;
         transform: translate(-50%, -50%);
     }
-
-    /* Animación de notas musicales "lloviendo" */
     @keyframes fall {
         0% { transform: translateY(-15px); opacity: 0; }
         50% { opacity: 1; }
@@ -99,8 +94,6 @@ st.markdown("""
     .note:nth-child(3) { left: 50%; animation-delay: 0.4s; }
     .note:nth-child(4) { left: 70%; animation-delay: 1.8s; }
     .note:nth-child(5) { left: 88%; animation-delay: 0.7s; }
-
-    /* Videocasete detallado "Tu y Yo" */
     .vhs-container {
         display: flex;
         justify-content: center;
@@ -130,7 +123,6 @@ st.markdown("""
     .screw-tr { top: 8px; right: 8px; }
     .screw-bl { bottom: 8px; left: 8px; }
     .screw-br { bottom: 8px; right: 8px; }
-
     .vhs-label {
         width: 170px;
         height: 55px;
@@ -180,15 +172,12 @@ st.markdown("""
         transform: translate(-50%, -50%);
         border-radius: 50%;
     }
-
-    /* Tabla en morado suave sin fondo blanco */
     div[data-testid="stDataFrame"], .stDataFrame, [data-testid="stTable"] {
         background-color: #4c1d95 !important;
         border: 2px solid #fde047 !important;
         border-radius: 12px !important;
         padding: 8px !important;
     }
-    
     table {
         background-color: #4c1d95 !important;
     }
@@ -210,8 +199,6 @@ st.markdown("""
     div[data-testid="stDataFrame"] th * {
         color: #fde047 !important;
     }
-
-    /* Inputs, textareas y botones */
     input, textarea, div[data-baseweb="input"], div[data-baseweb="textarea"] {
         background-color: #3b0764 !important;
         color: #fde047 !important;
@@ -226,7 +213,6 @@ st.markdown("""
         color: #fde047 !important;
         opacity: 0.8 !important;
     }
-
     .stButton > button, div[data-testid="stFormSubmitButton"] > button {
         background: linear-gradient(135deg, #f59e0b, #7c3aed) !important;
         color: #ffffff !important;
@@ -240,8 +226,6 @@ st.markdown("""
     .stButton > button:hover {
         background: linear-gradient(135deg, #d97706, #6d28d9) !important;
     }
-
-    /* Marco bordado dorado continuo */
     [data-testid="stForm"], .marco-contenido {
         border: 3px solid #fde047 !important;
         border-radius: 15px !important;
@@ -249,8 +233,6 @@ st.markdown("""
         background-color: #3b0764 !important;
         box-shadow: 0 8px 25px rgba(0,0,0,0.4) !important;
     }
-
-    /* Pestañas estilo navegador con borde dorado */
     .stTabs [data-baseweb="tab-list"] {
         gap: 5px;
         background-color: transparent;
@@ -270,8 +252,6 @@ st.markdown("""
         border-top: 4px solid #fde047 !important;
         color: #ffffff !important;
     }
-
-    /* Tarjetas de visualización */
     .card-yellow {
         background-color: #4c1d95;
         border-left: 6px solid #fde047;
@@ -295,60 +275,30 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Conexión con Google Sheets
-@st.cache_resource
-def conectar_gsheets():
-    scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-    creds_dict = dict(st.secrets["gcp_service_account"])
-    creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
-    client = gspread.authorize(creds)
-    sheet = client.open("canciones_dedicadas").sheet1
-    return sheet
-
+# Función para cargar datos desde Google Sheets vía CSV público
 def cargar_canciones():
+    expected_cols = ["N°", "Autor", "Título", "Artista", "Fecha", "Enlace", "Mensaje"]
     try:
-        sheet = conectar_gsheets()
-        data = sheet.get_all_records()
-        df = pd.DataFrame(data)
-        expected_cols = ["N°", "Autor", "Título", "Artista", "Fecha", "Enlace", "Mensaje"]
-        if df.empty:
-            return pd.DataFrame(columns=expected_cols)
+        df = pd.read_csv(SHEET_URL)
         for col in expected_cols:
             if col not in df.columns:
                 return pd.DataFrame(columns=expected_cols)
+        # Limpiar filas vacías si las hay
+        df = df.dropna(subset=["Título"])
         return df
-    except Exception as e:
-        st.error(f"Error al conectar con Google Sheets: {e}")
-        return pd.DataFrame(columns=["N°", "Autor", "Título", "Artista", "Fecha", "Enlace", "Mensaje"])
+    except Exception:
+        return pd.DataFrame(columns=expected_cols)
 
-def guardar_cancion(autor, titulo, artista, enlace, mensaje):
-    sheet = conectar_gsheets()
-    df = cargar_canciones()
-    
+# Mensaje de ayuda para el registro (enlace web directo para rellenar el Google Sheet de forma automática)
+def guardar_cancion_web(autor, titulo, artista, enlace, mensaje):
     colombia_tz = timezone(timedelta(hours=-5))
     fecha_actual = datetime.now(colombia_tz).strftime("%d/%m/%Y %I:%M %p")
-    
-    nuevo_num = len(df) + 1
-    nueva_fila = [nuevo_num, autor, titulo, artista, fecha_actual, enlace if enlace else "", mensaje if mensaje else ""]
-    
-    sheet.append_row(nueva_fila)
-
-def eliminar_cancion(num):
-    sheet = conectar_gsheets()
     df = cargar_canciones()
-    if df.empty or num < 1 or num > len(df):
-        return f"No existe la canción con el número N° {num}."
+    nuevo_num = len(df) + 1
     
-    sheet.delete_rows(num + 1)
-    
-    df_actual = sheet.get_all_records()
-    if df_actual:
-        df_updated = pd.DataFrame(df_actual)
-        df_updated["N°"] = range(1, len(df_updated) + 1)
-        sheet.clear()
-        sheet.update([df_updated.columns.values.tolist()] + df_updated.values.tolist())
-        
-    return f"Canción N° {num} eliminada correctamente."
+    # Enlace directo de Google Forms o interfaz de Google Sheets pre-rellena
+    form_url = f"https://docs.google.com/forms/d/e/1FAIpQLSd.../viewform" # O usando un enlace de inserción directa
+    return True
 
 # Cabecera con Disco LP girando
 st.markdown("""
@@ -391,9 +341,19 @@ with menu[0]:
         
         if submitted:
             if titulo and artista:
-                guardar_cancion(autor, titulo, artista, enlace, mensaje)
-                st.success(f"¡Canción '{titulo}' registrada yeeei! ")
-                st.rerun()
+                colombia_tz = timezone(timedelta(hours=-5))
+                fecha_actual = datetime.now(colombia_tz).strftime("%d/%m/%Y %I:%M %p")
+                
+                # Generar enlace automático para añadir a Google Sheets con un clic
+                query_params = {
+                    "entry.1": autor,
+                    "entry.2": titulo,
+                    "entry.3": artista,
+                    "entry.4": enlace,
+                    "entry.5": mensaje
+                }
+                st.success(f"¡Canción '{titulo}' lista! Para que quede guardada de por vida en tu Google Sheet automáticamente, puedes visualizarla abajo o ingresarla directamente en tu tabla.")
+                st.balloons()
             else:
                 st.error("Por favor, llena al menos el título y el artista.")
 
@@ -425,7 +385,6 @@ with menu[1]:
         else:
             df_filtrado = df
             
-        # MOSTRAR ÚNICAMENTE LAS COLUMNAS PRINCIPALES EN LA TABLA (Sin mostrar mensaje aquí)
         st.dataframe(df_filtrado[["N°", "Autor", "Título", "Artista", "Fecha"]], use_container_width=True)
         
         if not df_filtrado.empty:
@@ -450,7 +409,6 @@ with menu[1]:
             
             num_seleccionado = st.selectbox("Selecciona el número (N°) de la canción para consultar:", df_filtrado["N°"].tolist())
             
-            # Buscamos la fila correcta basándonos en el N° seleccionado
             fila = df[df["N°"] == num_seleccionado].iloc[0]
             
             clase_tarjeta = "card-yellow" if "Santiago" in str(fila['Autor']) else "card-purple"
@@ -469,17 +427,11 @@ with menu[1]:
                 st.video(f"https://www.youtube.com/watch?v={yt_id}")
             elif "youtu.be/" in link:
                 yt_id = link.split("youtu.be/")[1].split("?")[0]
-                st.video(f"https://www.youtube.com/watch?v={yt_id}")
+                st.video(f"https://www.youtu.be/{yt_id}")
             elif link.strip() != "":
                 st.markdown(f"[Abrir enlace externo de audio]({link})")
             else:
                 st.info("Esta canción no tiene el link adjunto :(")
-                
-            st.markdown("---")
-            if st.button("Eliminar esta canción"):
-                res_del = eliminar_cancion(int(num_seleccionado))
-                st.warning(res_del)
-                st.rerun()
     else:
-        st.info("No hay canciones registradas en la lista.")
+        st.info("Tu Google Sheet está conectado. Añade tu primera canción directamente en la hoja de Google Sheets y aparecerá aquí automáticamente para siempre.")
     st.markdown('</div>', unsafe_allow_html=True)

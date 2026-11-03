@@ -8,13 +8,13 @@ DATA_FILE = "canciones_dedicadas.csv"
 # Configuración de la página
 st.set_page_config(page_title="Lista de Canciones 🐥💖", page_icon="🎵", layout="centered")
 
-# Estilos CSS corregidos para el marco general y los campos de texto
+# Estilos CSS estrictos con selectores específicos de Streamlit
 st.markdown("""
     <style>
     /* Fondo general morado */
     .stApp {
-        background-color: #2e1065;
-        color: #fef08a;
+        background-color: #2e1065 !important;
+        color: #fef08a !important;
     }
     
     /* Textos principales y títulos en amarillo dorado */
@@ -24,7 +24,7 @@ st.markdown("""
         text-shadow: 0 2px 4px rgba(0,0,0,0.3);
     }
 
-    p, label, .streamlit-expanderHeader, .stMarkdown {
+    p, label, .streamlit-expanderHeader, .stMarkdown, span {
         color: #fef08a !important;
     }
 
@@ -71,37 +71,53 @@ st.markdown("""
         transform: translate(-50%, -50%);
     }
 
-    /* Marco general continuo que encierra todo el contenido de las pestañas */
-    .marco-contenido {
-        border: 3px solid #fde047;
-        border-radius: 0 15px 15px 15px;
-        padding: 30px;
-        background-color: #240c50;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-        margin-top: -2px;
-        margin-bottom: 30px;
+    /* Forzar que TODOS los inputs y textareas (cuadro grande de dedicatoria) sean morados con borde amarillo */
+    input, textarea, div[data-baseweb="input"], div[data-baseweb="textarea"], div[data-baseweb="base-input"] {
+        background-color: #3b0764 !important;
+        color: #fde047 !important;
+        border-radius: 8px !important;
     }
 
-    /* Cajas de texto (inputs y textareas) con fondo morado, bordes y textos dorados */
-    .stTextInput > div > div > input, .stTextArea > div > div > textarea {
-        background-color: #3b0764 !important;
+    .stTextInput input, .stTextArea textarea {
         border: 2px solid #fde047 !important;
-        border-radius: 8px !important;
         color: #fde047 !important;
+        background-color: #3b0764 !important;
     }
-    .stTextInput > div > div > input::placeholder, .stTextArea > div > div > textarea::placeholder {
+
+    /* Placeholder / Texto de ejemplo amarillo */
+    input::placeholder, textarea::placeholder {
         color: #fde047 !important;
         opacity: 0.8 !important;
     }
-    .stTextInput > div > div > input:focus, .stTextArea > div > div > textarea:focus {
-        border-color: #fbbf24 !important;
-        box-shadow: 0 0 10px rgba(253, 224, 71, 0.6) !important;
-        color: #fde047 !important;
+
+    /* Botón principal dentro y fuera del formulario (evitar fondo blanco) */
+    .stButton > button, div[data-testid="stFormSubmitButton"] > button {
+        background: linear-gradient(135deg, #f59e0b, #7c3aed) !important;
+        color: #ffffff !important;
+        border-radius: 10px !important;
+        font-weight: bold !important;
+        border: 2px solid #fde047 !important;
+        padding: 0.6rem 1.2rem !important;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4) !important;
+        width: 100% !important;
     }
 
-    /* Pestañas estilo navegador con rebordeado dorado */
+    .stButton > button:hover, div[data-testid="stFormSubmitButton"] > button:hover {
+        background: linear-gradient(135deg, #d97706, #6d28d9) !important;
+    }
+
+    /* Marco bordado dorado alrededor del contenido */
+    [data-testid="stForm"], .marco-contenido {
+        border: 3px solid #fde047 !important;
+        border-radius: 15px !important;
+        padding: 25px !important;
+        background-color: #240c50 !important;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.4) !important;
+    }
+
+    /* Pestañas (Tabs) estilo navegador con borde dorado */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 4px;
+        gap: 5px;
         background-color: transparent;
         border-bottom: none;
     }
@@ -118,21 +134,6 @@ st.markdown("""
         background-color: #240c50 !important;
         border-top: 4px solid #fde047 !important;
         color: #ffffff !important;
-    }
-
-    /* Botón principal estilizado */
-    .stButton > button {
-        background: linear-gradient(135deg, #f59e0b, #7c3aed);
-        color: #ffffff !important;
-        border-radius: 10px;
-        font-weight: bold;
-        border: 2px solid #fde047;
-        padding: 0.6rem 1.2rem;
-        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
-        width: 100%;
-    }
-    .stButton > button:hover {
-        background: linear-gradient(135deg, #d97706, #6d28d9);
     }
 
     /* Tarjetas de visualización */
@@ -193,7 +194,7 @@ def eliminar_cancion(num):
     df.to_csv(DATA_FILE, index=False)
     return f"Canción N° {num} eliminada correctamente."
 
-# Cabecera con Disco LP girando y tus textos originales
+# Cabecera con Disco LP girando y textos principales
 st.markdown("""
     <div class="lp-container">
         <div class="lp-record">
@@ -210,13 +211,9 @@ st.markdown("""
 
 menu = st.tabs(["Registrar una canción", "Ver y escuchar nuestras listas"])
 
-# Abrimos el contenedor con el marco dorado continuo
-st.markdown('<div class="marco-contenido">', unsafe_allow_html=True)
-
 with menu[0]:
-    st.markdown("<h3 style='color: #fde047; margin-top: 0;'>Registrar una canción</h3>", unsafe_allow_html=True)
-    
     with st.form("registro_form", clear_on_submit=True):
+        st.markdown("<h3 style='color: #fde047; margin-top: 0;'>Registrar una canción</h3>", unsafe_allow_html=True)
         autor = st.radio("¿Quién está registrando la canción?", ["Santiago 🐥(Para Tali)", "Taliana 💖(Para Puente)"])
         titulo = st.text_input("Título de la canción", placeholder="Ej. IMU")
         artista = st.text_input("Artista", placeholder="Ej. Jorge Cuellar")
@@ -233,6 +230,7 @@ with menu[0]:
                 st.error("Por favor, llena al menos el título y el artista.")
 
 with menu[1]:
+    st.markdown('<div class="marco-contenido">', unsafe_allow_html=True)
     st.markdown("<h3 style='color: #fde047; margin-top: 0;'>Ver y escuchar nuestras listas</h3>", unsafe_allow_html=True)
     filtro = st.radio("Filtrar Lista", ["Mis canciones 🐥(Dedicatorias para Tali)", "Mis canciones 💖(Dedicatorias para Puente)", "Ver todas juntas 🐥💖"])
     
@@ -284,6 +282,4 @@ with menu[1]:
                 st.rerun()
     else:
         st.info("Aún no hay canciones registradas en la lista.")
-
-# Cerramos el contenedor del marco dorado
-st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)

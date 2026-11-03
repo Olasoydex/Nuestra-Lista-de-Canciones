@@ -8,7 +8,7 @@ DATA_FILE = "canciones_dedicadas.csv"
 # Configuración de la página
 st.set_page_config(page_title="Lista de Canciones 🐥💖", page_icon="🎵", layout="centered")
 
-# Estilos CSS con letras doradas, fondo morado y disco LP girando
+# Estilos CSS con pestañas estilo Google, texto de ejemplo amarillo dorado y disco LP girando
 st.markdown("""
     <style>
     /* Fondo general morado */
@@ -18,7 +18,7 @@ st.markdown("""
     }
     
     /* Textos principales y títulos en amarillo dorado */
-    h1, h2, h3, .dorado-text {
+    h1, h2, h3 {
         color: #fde047 !important;
         font-family: 'Helvetica Neue', sans-serif;
         text-shadow: 0 2px 4px rgba(0,0,0,0.3);
@@ -28,7 +28,7 @@ st.markdown("""
         color: #fef08a !important;
     }
 
-    /* Animación del disco LP (Vinilo morado y acentos amarillos) */
+    /* Animación del disco LP */
     @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
@@ -71,19 +71,46 @@ st.markdown("""
         transform: translate(-50%, -50%);
     }
 
-    /* Cajas de texto con bordes dorados y fondo morado oscuro */
+    /* Cajas de texto con bordes dorados, fondo morado y texto de ejemplo (placeholder) en amarillo dorado */
     .stTextInput > div > div > input, .stTextArea > div > div > textarea {
         background-color: #3b0764 !important;
         border: 2px solid #fde047 !important;
         border-radius: 8px !important;
-        color: #fef08a !important;
+        color: #fde047 !important;
+    }
+    .stTextInput > div > div > input::placeholder, .stTextArea > div > div > textarea::placeholder {
+        color: #fde047 !important;
+        opacity: 0.8 !important;
     }
     .stTextInput > div > div > input:focus, .stTextArea > div > div > textarea:focus {
         border-color: #fbbf24 !important;
-        box-shadow: 0 0 10px rgba(253, 224, 71, 0.5) !important;
+        box-shadow: 0 0 10px rgba(253, 224, 71, 0.6) !important;
+        color: #fde047 !important;
     }
 
-    /* Botón principal estilizado en tonos dorados/morados */
+    /* Pestañas (Tabs) estilo Google con rebordeado dorado */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background-color: #1e1b4b;
+        padding: 10px;
+        border-radius: 12px 12px 0 0;
+        border-bottom: 2px solid #fde047;
+    }
+    .stTabs [data-baseweb="tab"] {
+        background-color: #3b0764;
+        border: 2px solid #fde047 !important;
+        border-radius: 8px 8px 0 0 !important;
+        color: #fde047 !important;
+        font-weight: bold;
+        padding: 10px 20px;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #7c3aed !important;
+        border-bottom: 4px solid #fde047 !important;
+        color: #ffffff !important;
+    }
+
+    /* Botón principal estilizado */
     .stButton > button {
         background: linear-gradient(135deg, #f59e0b, #7c3aed);
         color: #ffffff !important;
@@ -156,7 +183,7 @@ def eliminar_cancion(num):
     df.to_csv(DATA_FILE, index=False)
     return f"Canción N° {num} eliminada correctamente."
 
-# Cabecera con Disco LP girando y tus textos originales con emojis y letras doradas
+# Cabecera con Disco LP girando y tus textos originales
 st.markdown("""
     <div class="lp-container">
         <div class="lp-record">

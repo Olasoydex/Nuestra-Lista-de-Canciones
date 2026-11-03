@@ -5,6 +5,43 @@ from datetime import datetime
 
 DATA_FILE = "canciones_dedicadas.csv"
 
+# Configuración de la página
+st.set_page_config(page_title="Nuestra Playlist 🐥💖", page_icon="🎶", layout="centered")
+
+# Estilos visuales personalizados (Tonos morados, amarillos y temática LP romántica)
+st.markdown("""
+    <style>
+    .main {
+        background-color: #f9f6fc;
+    }
+    h1, h2, h3 {
+        color: #5b21b6 !important;
+    }
+    .stButton>button {
+        background: linear-gradient(135deg, #7c3aed, #d97706);
+        color: white;
+        border-radius: 12px;
+        font-weight: bold;
+        border: none;
+        padding: 0.5rem 1rem;
+        box-shadow: 0 4px 6px rgba(124, 58, 237, 0.2);
+    }
+    .stButton>button:hover {
+        background: linear-gradient(135deg, #6d28d9, #b45309);
+        color: white;
+    }
+    .vinyl-card {
+        background: linear-gradient(135deg, #f3e8ff, #fef3c7);
+        padding: 20px;
+        border-radius: 15px;
+        border-left: 6px solid #7c3aed;
+        border-right: 6px solid #d97706;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 def cargar_canciones():
     expected_cols = ["N°", "Autor", "Título", "Artista", "Fecha", "Enlace", "Mensaje"]
     if os.path.exists(DATA_FILE):
@@ -17,9 +54,6 @@ def cargar_canciones():
         return pd.DataFrame(columns=expected_cols)
 
 def guardar_cancion(autor, titulo, artista, enlace, mensaje):
-    if not titulo or not artista:
-        return "⚠️ Por favor, llena al menos el título y el artista."
-    
     df = cargar_canciones()
     fecha_actual = datetime.now().strftime("%d/%m/%Y %H:%M")
     
@@ -29,8 +63,6 @@ def guardar_cancion(autor, titulo, artista, enlace, mensaje):
     df = pd.concat([df, nueva_fila], ignore_index=True)
     df["N°"] = range(1, len(df) + 1)
     df.to_csv(DATA_FILE, index=False)
-    
-    return f"✨ ¡Canción '{titulo}' registrada con éxito en la lista de {autor}! 💖"
 
 def eliminar_cancion(num):
     df = cargar_canciones()
@@ -44,31 +76,36 @@ def eliminar_cancion(num):
     df.to_csv(DATA_FILE, index=False)
     return f"🗑️ Canción N° {num} eliminada correctamente."
 
-# Configuración de la página en Streamlit
-st.set_page_config(page_title="Nuestra Playlist 🐥💖", page_icon="🎶", layout="centered")
+# Inicializar estados para limpiar formularios
+if "form_submitted" not in st.session_state:
+    st.session_state.form_submitted = False
 
-st.title("🎶 Lista de Canciones 🐥💖")
-st.write("Nuestra lista de canciones que nos hemos dedicado, esto quedará, hasta el final de la vida.")
+st.markdown("<h1 style='text-align: center;'>🎶 Nuestra Playlist de Discos 💿 🐥💖</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #6b7280;'>Nuestra lista de canciones que nos hemos dedicado, esto quedará hasta el final de la vida. 💜💛</p>", unsafe_allow_html=True)
 
-menu = st.tabs(["Registrar una canción", "Ver y escuchar nuestras listas"])
+menu = st.tabs(["✨ Registrar una canción", "🎧 Ver y escuchar listas"])
 
 with menu[0]:
-    st.subheader("Registrar una canción")
-    autor = st.radio("¿Quién está registrando la canción?", ["Santiago 🐥(Para Tali)", "Taliana 💖(Para Puente)"])
-    titulo = st.text_input("Título de la canción", placeholder="Ej. IMU")
-    artista = st.text_input("Artista", placeholder="Ej. Jorge Cuellar")
-    enlace = st.text_input("Enlace de YouTube (Opcional)", placeholder="Link de la canción")
-    mensaje = st.text_area("Mensaje o dedicatoria", placeholder="¿Qué te recuerda de mi esta canción? OPCIONAL")
+    st.markdown("### 💽 Agregar a nuestro Vinilo Musical")
     
-    if st.button("Registrar Canción", type="primary"):
-        if titulo and artista:
-            msg = guardar_cancion(autor, titulo, artista, enlace, mensaje)
-            st.success(msg)
-        else:
-            st.error("⚠️ Por favor, llena al menos el título y el artista.")
+    with st.form("registro_form", clear_on_submit=True):
+        autor = st.radio("¿Quién está registrando la canción?", ["Santiago 🐥(Para Tali)", "Taliana 💖(Para Puente)"])
+        titulo = st.text_input("Título de la canción", placeholder="Ej. IMU")
+        artista = st.text_input("Artista", placeholder="Ej. Jorge Cuellar")
+        enlace = st.text_input("Enlace de YouTube (Opcional)", placeholder="Link de la canción")
+        mensaje = st.text_area("Mensaje o dedicatoria", placeholder="¿Qué te recuerda de mí esta canción? OPCIONAL")
+        
+        submitted = st.form_submit_button("Registrar Canción 🎵")
+        
+        if submitted:
+            if titulo and artista:
+                guardar_cancion(autor, titulo, artista, enlace, mensaje)
+                st.success(f"✨ ¡Canción '{titulo}' registrada con éxito! Ya se ha limpiado el formulario para la siguiente 💖")
+            else:
+                st.error("⚠️ Por favor, llena al menos el título y el artista.")
 
 with menu[1]:
-    st.subheader("Selecciona qué lista deseas explorar:")
+    st.subheader("🎧 Explora nuestro Repositorio Musical")
     filtro = st.radio("Filtrar Lista", ["Mis canciones 🐥(Dedicatorias para Tali)", "Mis canciones 💖(Dedicatorias para Puente)", "Ver todas juntas 🐥💖"])
     
     df = cargar_canciones()
@@ -85,13 +122,19 @@ with menu[1]:
         
         if not df_filtrado.empty:
             st.markdown("---")
-            st.subheader("📖 Detalles y Reproductor")
-            num_seleccionado = st.selectbox("Selecciona el número (N°) de la canción para ver detalles:", df_filtrado["N°"].tolist())
+            st.markdown("### 🎛️ Reproductor y Detalles del LP")
+            num_seleccionado = st.selectbox("Selecciona el número (N°) de la canción para reproducir:", df_filtrado["N°"].tolist())
             
             fila = df[df["N°"] == num_seleccionado].iloc[0]
-            st.markdown(f"### 🎵 {fila['Título']} - {fila['Artista']}")
-            st.write(f"**Registrada por:** {fila['Autor']} | **Fecha:** {fila['Fecha']}")
-            st.info(f"Mensaje: *{fila['Mensaje'] if fila['Mensaje'] else 'Sin mensaje especial'}*")
+            
+            # Tarjeta estilizada con los colores morado y amarillo estilo disco LP
+            st.markdown(f"""
+                <div class="vinyl-card">
+                    <h2 style="margin: 0; color: #5b21b6;">📀 {fila['Título']} - <b>{fila['Artista']}</b></h2>
+                    <p style="margin: 5px 0; color: #4b5563;"><b>Registrada por:</b> {fila['Autor']} &nbsp;|&nbsp; <b>Fecha:</b> {fila['Fecha']}</p>
+                    <p style="margin-top: 10px; font-style: italic; color: #1f2937;">"{fila['Mensaje'] if fila['Mensaje'] else 'Un disco guardado sin mensaje, pero con mucho sentimiento.'}"</p>
+                </div>
+            """, unsafe_allow_html=True)
             
             link = str(fila["Enlace"])
             if "youtube.com/watch?v=" in link:
@@ -101,14 +144,14 @@ with menu[1]:
                 yt_id = link.split("youtu.be/")[1].split("?")[0]
                 st.video(f"https://www.youtube.com/watch?v={yt_id}")
             elif link.strip() != "":
-                st.markdown(f"🔗 [Abrir enlace externo]({link})")
+                st.markdown(f"🔗 [Abrir enlace externo de audio]({link})")
             else:
-                st.write("🎵 Esta canción no tiene enlace adjunto.")
+                st.info("🎵 Este disco LP no tiene enlace de video adjunto, ¡pero el recuerdo está a salvo!")
                 
             st.markdown("---")
-            if st.button("🗑️ Eliminar esta canción"):
+            if st.button("🗑️ Eliminar esta canción del disco"):
                 res_del = eliminar_cancion(int(num_seleccionado))
                 st.warning(res_del)
                 st.rerun()
     else:
-        st.info("Aún no hay canciones registradas. ¡Agrega la primera en la pestaña anterior!")
+        st.info("Aún no hay canciones en el disco. ¡Agrega la primera en la pestaña de registro!")

@@ -272,6 +272,13 @@ st.markdown("""
         box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         color: #f3e8ff;
     }
+    .secret-box {
+        background-color: #1e1b4b;
+        border: 2px dashed #fde047;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -385,7 +392,6 @@ with menu[1]:
     df = cargar_canciones()
     
     if not df.empty:
-        # Filtrado por autor
         if "Ver todas" in filtro:
             df_filtrado = df
         elif "🐥" in filtro:
@@ -423,7 +429,7 @@ with menu[1]:
             
             clase_tarjeta = "card-yellow" if "Santiago" in str(fila['Autor']) else "card-purple"
             
-            # Tarjeta limpia sin mostrar el mensaje ni el enlace escrito
+            # Tarjeta principal limpia (Sin mensaje ni enlace a la vista)
             st.markdown(f"""
                 <div class="{clase_tarjeta}">
                     <h3 style="margin: 0; color: #fde047;">{fila['Título']} — {fila['Artista']}</h3>
@@ -431,7 +437,18 @@ with menu[1]:
                 </div>
             """, unsafe_allow_html=True)
             
-            # Reproductor o enlace externo limpio
+            # Sección exclusiva (desplegable especial) para ver el mensaje y enlace de fondo
+            with st.expander("💌 Ver dedicatoria y detalles secretos de esta canción"):
+                st.markdown(f"<b>Mensaje guardado:</b>", unsafe_allow_html=True)
+                st.markdown(f"<i>\"{str(fila['Mensaje']) if pd.notna(fila['Mensaje']) and str(fila['Mensaje']).strip() != '' else 'No tiene dedicatoria escrita.'}\"</i>", unsafe_allow_html=True)
+                
+                link = str(fila["Enlace"]) if pd.notna(fila["Enlace"]) else ""
+                if link.strip() != "":
+                    st.markdown(f"**Enlace registrado:** [{link}]({link})")
+                else:
+                    st.info("No hay enlace web adjunto.")
+
+            # Reproductor de video / audio limpio
             link = str(fila["Enlace"]) if pd.notna(fila["Enlace"]) else ""
             if "youtube.com/watch?v=" in link:
                 yt_id = link.split("v=")[1].split("&")[0]
@@ -442,7 +459,7 @@ with menu[1]:
             elif link.strip() != "":
                 st.markdown(f"[Abrir enlace externo de audio]({link})")
             else:
-                st.info("Esta canción no tiene el link adjunto :(")
+                st.info("Esta canción no tiene el link para reproducir video directo :(")
                 
             st.markdown("---")
             if st.button("Eliminar esta canción"):

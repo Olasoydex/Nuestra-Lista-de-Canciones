@@ -1,9 +1,8 @@
-import os
 import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta, timezone
-
-DATA_FILE = "canciones_dedicadas.csv"
+import gspread
+from google.oauth2.service_account import Credentials
 
 # Configuración de la página
 st.set_page_config(page_title="Lista de Canciones 🐥💝", page_icon="🎵", layout="centered")
@@ -296,41 +295,59 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Conexión con Google Sheets
+@st.cache_resource
+def conectar_gsheets():
+    scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+    creds_dict = dict(st.secrets["gcp_service_account"])
+    creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
+    client = gspread.authorize(creds)
+    sheet = client.open("canciones_dedicadas").sheet1
+    return sheet
+
 def cargar_canciones():
-    expected_cols = ["N°", "Autor", "Título", "Artista", "Fecha", "Enlace", "Mensaje"]
-    if os.path.exists(DATA_FILE):
-        df = pd.read_csv(DATA_FILE)
+    try:
+        sheet = conectar_gsheets()
+        data = sheet.get_all_records()
+        df = pd.DataFrame(data)
+        expected_cols = ["N°", "Autor", "Título", "Artista", "Fecha", "Enlace", "Mensaje"]
+        if df.empty:
+            return pd.DataFrame(columns=expected_cols)
         for col in expected_cols:
             if col not in df.columns:
                 return pd.DataFrame(columns=expected_cols)
         return df
-    else:
-        return pd.DataFrame(columns=expected_cols)
+    except Exception as e:
+        st.error(f"Error al conectar con Google Sheets: {e}")
+        return pd.DataFrame(columns=["N°", "Autor", "Título", "Artista", "Fecha", "Enlace", "Mensaje"])
 
 def guardar_cancion(autor, titulo, artista, enlace, mensaje):
+    sheet = conectar_gsheets()
     df = cargar_canciones()
     
-    # Hora de Colombia (UTC-5) de forma nativa sin dependencias externas
     colombia_tz = timezone(timedelta(hours=-5))
     fecha_actual = datetime.now(colombia_tz).strftime("%d/%m/%Y %I:%M %p")
     
-    nueva_fila = pd.DataFrame([[0, autor, titulo, artista, fecha_actual, enlace if enlace else "", mensaje if mensaje else ""]], 
-                              columns=["N°", "Autor", "Título", "Artista", "Fecha", "Enlace", "Mensaje"])
+    nuevo_num = len(df) + 1
+    nueva_fila = [nuevo_num, autor, titulo, artista, fecha_actual, enlace if enlace else "", mensaje if mensaje else ""]
     
-    df = pd.concat([df, nueva_fila], ignore_index=True)
-    df["N°"] = range(1, len(df) + 1)
-    df.to_csv(DATA_FILE, index=False)
+    sheet.append_row(nueva_fila)
 
 def eliminar_cancion(num):
+    sheet = conectar_gsheets()
     df = cargar_canciones()
     if df.empty or num < 1 or num > len(df):
         return f"No existe la canción con el número N° {num}."
     
-    df = df[df["N°"] != num].reset_index(drop=True)
-    if not df.empty:
-        df["N°"] = range(1, len(df) + 1)
+    sheet.delete_rows(num + 1)
     
-    df.to_csv(DATA_FILE, index=False)
+    df_actual = sheet.get_all_records()
+    if df_actual:
+        df_updated = pd.DataFrame(df_actual)
+        df_updated["N°"] = range(1, len(df_updated) + 1)
+        sheet.clear()
+        sheet.update([df_updated.columns.values.tolist()] + df_updated.values.tolist())
+        
     return f"Canción N° {num} eliminada correctamente."
 
 # Cabecera con Disco LP girando
@@ -354,7 +371,6 @@ with menu[0]:
     with st.form("registro_form", clear_on_submit=True):
         st.markdown("<h3 style='color: #fde047; margin-top: 0;'>Registrar una canción</h3>", unsafe_allow_html=True)
         
-        # Cuadro con lluvia de notas musicales animadas
         st.markdown("""
             <div class="rain-container">
                 <div class="note">🎵</div>
@@ -377,6 +393,7 @@ with menu[0]:
             if titulo and artista:
                 guardar_cancion(autor, titulo, artista, enlace, mensaje)
                 st.success(f"¡Canción '{titulo}' registrada yeeei! ")
+                st.rerun()
             else:
                 st.error("Por favor, llena al menos el título y el artista.")
 
@@ -384,7 +401,6 @@ with menu[1]:
     st.markdown('<div class="marco-contenido">', unsafe_allow_html=True)
     st.markdown("<h3 style='color: #fde047; margin-top: 0;'>Ver y escuchar nuestras listas</h3>", unsafe_allow_html=True)
     
-    # Cuadro con lluvia de notas musicales
     st.markdown("""
         <div class="rain-container">
             <div class="note">🎵</div>
@@ -400,7 +416,6 @@ with menu[1]:
     df = cargar_canciones()
     
     if not df.empty:
-        # LÓGICA DE FILTRADO
         if "Ver todas" in filtro:
             df_filtrado = df
         elif "🐥" in filtro:
@@ -410,13 +425,13 @@ with menu[1]:
         else:
             df_filtrado = df
             
+        # MOSTRAR ÚNICAMENTE LAS COLUMNAS PRINCIPALES EN LA TABLA (Sin mostrar mensaje aquí)
         st.dataframe(df_filtrado[["N°", "Autor", "Título", "Artista", "Fecha"]], use_container_width=True)
         
         if not df_filtrado.empty:
             st.markdown("---")
             st.markdown("<h3 style='color: #fde047;'>Reproductor y detalles</h3>", unsafe_allow_html=True)
             
-            # Videocasete detallado "Tu y Yo"
             st.markdown("""
                 <div class="vhs-container">
                     <div class="vhs-tape">
@@ -435,6 +450,7 @@ with menu[1]:
             
             num_seleccionado = st.selectbox("Selecciona el número (N°) de la canción para consultar:", df_filtrado["N°"].tolist())
             
+            # Buscamos la fila correcta basándonos en el N° seleccionado
             fila = df[df["N°"] == num_seleccionado].iloc[0]
             
             clase_tarjeta = "card-yellow" if "Santiago" in str(fila['Autor']) else "card-purple"
@@ -443,7 +459,7 @@ with menu[1]:
                 <div class="{clase_tarjeta}">
                     <h3 style="margin: 0; color: #fde047;">{fila['Título']} — {fila['Artista']}</h3>
                     <p style="margin: 5px 0; color: #fef08a;"><b>Registrada por:</b> {fila['Autor']} | <b>Fecha:</b> {fila['Fecha']}</p>
-                    <p style="margin-top: 10px;"><b>Dedicatoria:</b> <i>"{fila['Mensaje'] if fila['Mensaje'] else 'No tiene dedicatoria :(.'}"</i></p>
+                    <p style="margin-top: 10px;"><b>Dedicatoria:</b> <i>"{fila['Mensaje'] if str(fila['Mensaje']).strip() != '' else 'No tiene dedicatoria :(.'}"</i></p>
                 </div>
             """, unsafe_allow_html=True)
             

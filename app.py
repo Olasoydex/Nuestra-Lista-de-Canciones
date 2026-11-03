@@ -311,7 +311,7 @@ def guardar_cancion(autor, titulo, artista, enlace, mensaje):
     df = cargar_canciones()
     
     # Hora de Colombia (UTC-5) de forma nativa sin dependencias externas
-.    colombia_tz = timezone(timedelta(hours=-5))
+    colombia_tz = timezone(timedelta(hours=-5))
     fecha_actual = datetime.now(colombia_tz).strftime("%d/%m/%Y %I:%M %p")
     
     nueva_fila = pd.DataFrame([[0, autor, titulo, artista, fecha_actual, enlace if enlace else "", mensaje if mensaje else ""]], 

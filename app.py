@@ -373,7 +373,7 @@ with menu[0]:
         if submitted:
             if titulo and artista:
                 guardar_cancion(autor, titulo, artista, enlace, mensaje)
-                st.success(f"¡Canción '{titulo}' registrada con éxito! Los campos se han limpiado para la siguiente.")
+                st.success(f"¡Canción '{titulo}' registrada yeeei! ")
             else:
                 st.error("Por favor, llena al menos el título y el artista.")
 

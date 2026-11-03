@@ -8,7 +8,7 @@ DATA_FILE = "canciones_dedicadas.csv"
 # Configuración de la página
 st.set_page_config(page_title="Lista de Canciones 🐥💖", page_icon="🎵", layout="centered")
 
-# Estilos CSS avanzados: Tonos morados claros, notas cayendo, videocasete y tabla estilizada
+# Estilos CSS corregidos: Sin contenedores vacíos, tabla en morado suave con letras doradas, y videocasete "Tu y Yo"
 st.markdown("""
     <style>
     /* Fondo general morado */
@@ -71,37 +71,7 @@ st.markdown("""
         transform: translate(-50%, -50%);
     }
 
-    /* Animación de notas musicales "lloviendo" en el cuadro vacío */
-    @keyframes fall {
-        0% { transform: translateY(-20px); opacity: 0; }
-        50% { opacity: 1; }
-        100% { transform: translateY(50px); opacity: 0; }
-    }
-    .rain-container {
-        position: relative;
-        height: 80px;
-        border: 3px solid #fde047;
-        border-radius: 15px;
-        background: linear-gradient(135deg, #3b0764, #4c1d95);
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        overflow: hidden;
-        margin-bottom: 25px;
-        box-shadow: 0 4px 15px rgba(253, 224, 71, 0.2);
-    }
-    .note {
-        position: absolute;
-        font-size: 22px;
-        animation: fall 3s infinite linear;
-    }
-    .note:nth-child(1) { left: 15%; animation-delay: 0s; }
-    .note:nth-child(2) { left: 35%; animation-delay: 1s; }
-    .note:nth-child(3) { left: 55%; animation-delay: 0.5s; }
-    .note:nth-child(4) { left: 75%; animation-delay: 1.5s; }
-    .note:nth-child(5) { left: 90%; animation-delay: 0.8s; }
-
-    /* Videocasete CSS en el centro (estilo LP) */
+    /* Videocasete "Tu y Yo" en el centro */
     .vhs-container {
         display: flex;
         justify-content: center;
@@ -132,7 +102,7 @@ st.markdown("""
         align-items: center;
         color: #2e1065;
         font-weight: bold;
-        font-size: 13px;
+        font-size: 15px;
         box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
     }
     .vhs-reels {
@@ -161,23 +131,26 @@ st.markdown("""
         border-radius: 50%;
     }
 
-    /* Forzar tonos morados claros y eliminar blanco en tablas y contenedores */
+    /* Tabla estilizada en morado suave con letras doradas (Adiós fondo blanco) */
     div[data-testid="stDataFrame"], .stDataFrame {
-        background-color: #3b0764 !important;
+        background-color: #4c1d95 !important;
         border: 2px solid #fde047 !important;
         border-radius: 10px !important;
         padding: 5px;
     }
     
-    /* Celdas y cabeceras de tablas en tonos morados claros */
-    table, th, td, tr {
-        background-color: #3b0764 !important;
-        color: #fef08a !important;
+    table, th, td, tr, [data-testid="stTable"] {
+        background-color: #4c1d95 !important;
+        color: #fde047 !important;
         border-color: #7c3aed !important;
     }
     th {
-        background-color: #4c1d95 !important;
+        background-color: #3b0764 !important;
         color: #fde047 !important;
+        font-weight: bold !important;
+    }
+    td {
+        color: #fef08a !important;
     }
 
     /* Inputs, textareas y botones */
@@ -240,7 +213,7 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    /* Tarjetas de visualización en tonos morados claros */
+    /* Tarjetas de visualización */
     .card-yellow {
         background-color: #4c1d95;
         border-left: 6px solid #fde047;
@@ -319,17 +292,6 @@ with menu[0]:
     with st.form("registro_form", clear_on_submit=True):
         st.markdown("<h3 style='color: #fde047; margin-top: 0;'>Registrar una canción</h3>", unsafe_allow_html=True)
         
-        # Cuadro amarillo con lluvia de notas musicales animadas
-        st.markdown("""
-            <div class="rain-container">
-                <div class="note">🎵</div>
-                <div class="note">🎶</div>
-                <div class="note">🎼</div>
-                <div class="note">🎵</div>
-                <div class="note">🎶</div>
-            </div>
-        """, unsafe_allow_html=True)
-        
         autor = st.radio("¿Quién está registrando la canción?", ["Santiago 🐥(Para Tali)", "Taliana 💖(Para Puente)"])
         titulo = st.text_input("Título de la canción", placeholder="Ej. IMU")
         artista = st.text_input("Artista", placeholder="Ej. Jorge Cuellar")
@@ -349,17 +311,6 @@ with menu[1]:
     st.markdown('<div class="marco-contenido">', unsafe_allow_html=True)
     st.markdown("<h3 style='color: #fde047; margin-top: 0;'>Ver y escuchar nuestras listas</h3>", unsafe_allow_html=True)
     
-    # Cuadro amarillo con lluvia de notas musicales en la segunda pestaña también
-    st.markdown("""
-        <div class="rain-container">
-            <div class="note">🎵</div>
-            <div class="note">🎶</div>
-            <div class="note">🎼</div>
-            <div class="note">🎵</div>
-            <div class="note">🎶</div>
-        </div>
-    """, unsafe_allow_html=True)
-    
     filtro = st.radio("Filtrar Lista", ["Mis canciones 🐥(Dedicatorias para Tali)", "Mis canciones 💖(Dedicatorias para Puente)", "Ver todas juntas 🐥💖"])
     
     df = cargar_canciones()
@@ -378,11 +329,11 @@ with menu[1]:
             st.markdown("---")
             st.markdown("<h3 style='color: #fde047;'>Reproductor y detalles</h3>", unsafe_allow_html=True)
             
-            # Videocasete decorativo en el centro (estilo LP)
+            # Videocasete "Tu y Yo" en el centro
             st.markdown("""
                 <div class="vhs-container">
                     <div class="vhs-tape">
-                        <div class="vhs-label">VIDEO CASSETTE</div>
+                        <div class="vhs-label">Tu y Yo</div>
                         <div class="vhs-reels">
                             <div class="reel"></div>
                             <div class="reel"></div>

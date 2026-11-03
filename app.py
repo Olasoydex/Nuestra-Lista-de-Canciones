@@ -1,3 +1,4 @@
+import re
 import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta, timezone
@@ -6,8 +7,9 @@ import requests
 # Configuración de la página
 st.set_page_config(page_title="Lista de Canciones 🐥💝", page_icon="🎵", layout="centered")
 
-# ID del Google Sheet: copiarlo EXACTO de la URL (entre /d/ y /edit)
-SHEET_ID = "1qjGA_JLcrJGd8MQ8UHTIdRsOszOukowgCtws-qZzPpk"
+# Pega aquí la URL COMPLETA de tu Google Sheet (cópiala de la barra de direcciones con Ctrl+A, Ctrl+C)
+SHEET_LINK = "PEGA_AQUI_LA_URL_COMPLETA_DEL_SHEET"
+SHEET_ID = re.search(r"/d/([a-zA-Z0-9_-]+)", SHEET_LINK).group(1)
 SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv"
 WEB_APP_URL = "https://script.google.com/macros/s/AKfycbww1XIydnPRQvIZbbecLhBaSD7c4OEQgyJa-wpXryeAk6XaT7YXcbR08SpICqptfQim/exec"
 

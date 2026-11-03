@@ -8,7 +8,7 @@ DATA_FILE = "canciones_dedicadas.csv"
 # Configuración de la página
 st.set_page_config(page_title="Lista de Canciones 🐥💖", page_icon="🎵", layout="centered")
 
-# Estilos CSS corregidos: Sin contenedores vacíos, tabla en morado suave con letras doradas, y videocasete "Tu y Yo"
+# Estilos CSS con notas musicales cayendo, videocasete detallado y tabla en morado suave
 st.markdown("""
     <style>
     /* Fondo general morado */
@@ -71,59 +71,111 @@ st.markdown("""
         transform: translate(-50%, -50%);
     }
 
-    /* Videocasete "Tu y Yo" en el centro */
+    /* Animación de notas musicales "lloviendo" */
+    @keyframes fall {
+        0% { transform: translateY(-15px); opacity: 0; }
+        50% { opacity: 1; }
+        100% { transform: translateY(45px); opacity: 0; }
+    }
+    .rain-container {
+        position: relative;
+        height: 70px;
+        border: 3px solid #fde047;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #3b0764, #4c1d95);
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        overflow: hidden;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(253, 224, 71, 0.25);
+    }
+    .note {
+        position: absolute;
+        font-size: 20px;
+        animation: fall 3s infinite linear;
+    }
+    .note:nth-child(1) { left: 10%; animation-delay: 0s; }
+    .note:nth-child(2) { left: 30%; animation-delay: 1.2s; }
+    .note:nth-child(3) { left: 50%; animation-delay: 0.4s; }
+    .note:nth-child(4) { left: 70%; animation-delay: 1.8s; }
+    .note:nth-child(5) { left: 88%; animation-delay: 0.7s; }
+
+    /* Videocasete detallado "Tu y Yo" */
     .vhs-container {
         display: flex;
         justify-content: center;
         align-items: center;
-        margin: 20px 0;
+        margin: 25px 0;
     }
     .vhs-tape {
-        width: 220px;
-        height: 130px;
-        background: linear-gradient(135deg, #4c1d95, #3b0764);
+        width: 250px;
+        height: 150px;
+        background: linear-gradient(145deg, #3b0764, #1e1b4b);
         border: 4px solid #fde047;
-        border-radius: 12px;
+        border-radius: 14px;
         position: relative;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         display: flex;
         justify-content: center;
         align-items: center;
     }
-    .vhs-label {
-        width: 150px;
-        height: 45px;
+    /* Tornillos decorativos en las esquinas del casete */
+    .vhs-screw {
+        width: 8px;
+        height: 8px;
         background: #fde047;
-        border-radius: 6px;
+        border-radius: 50%;
         position: absolute;
-        top: 12px;
+    }
+    .screw-tl { top: 8px; left: 8px; }
+    .screw-tr { top: 8px; right: 8px; }
+    .screw-bl { bottom: 8px; left: 8px; }
+    .screw-br { bottom: 8px; right: 8px; }
+
+    .vhs-label {
+        width: 170px;
+        height: 55px;
+        background: #fde047;
+        border-radius: 8px;
+        position: absolute;
+        top: 15px;
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
         color: #2e1065;
         font-weight: bold;
-        font-size: 15px;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        font-size: 16px;
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.25);
+        border: 1px dashed #7c3aed;
     }
-    .vhs-reels {
-        display: flex;
-        gap: 50px;
+    .vhs-window {
+        width: 110px;
+        height: 35px;
+        background: #11052c;
+        border: 2px solid #fde047;
+        border-radius: 6px;
         position: absolute;
-        bottom: 20px;
+        bottom: 18px;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 0 10px;
     }
     .reel {
-        width: 35px;
-        height: 35px;
-        background: #1e1b4b;
-        border: 3px solid #fde047;
+        width: 26px;
+        height: 26px;
+        background: #3b0764;
+        border: 2px solid #f59e0b;
         border-radius: 50%;
         position: relative;
     }
     .reel::after {
         content: '';
-        width: 12px;
-        height: 12px;
-        background: #f59e0b;
+        width: 8px;
+        height: 8px;
+        background: #fde047;
         position: absolute;
         top: 50%;
         left: 50%;
@@ -131,26 +183,35 @@ st.markdown("""
         border-radius: 50%;
     }
 
-    /* Tabla estilizada en morado suave con letras doradas (Adiós fondo blanco) */
-    div[data-testid="stDataFrame"], .stDataFrame {
+    /* Forzar que la tabla sea en morado suave sin fondo blanco */
+    div[data-testid="stDataFrame"], .stDataFrame, [data-testid="stTable"] {
         background-color: #4c1d95 !important;
         border: 2px solid #fde047 !important;
-        border-radius: 10px !important;
-        padding: 5px;
+        border-radius: 12px !important;
+        padding: 8px !important;
     }
     
-    table, th, td, tr, [data-testid="stTable"] {
+    table {
         background-color: #4c1d95 !important;
-        color: #fde047 !important;
-        border-color: #7c3aed !important;
     }
     th {
         background-color: #3b0764 !important;
         color: #fde047 !important;
         font-weight: bold !important;
+        border-bottom: 2px solid #fde047 !important;
     }
-    td {
+    td, tr {
+        background-color: #4c1d95 !important;
         color: #fef08a !important;
+        border-bottom: 1px solid #7c3aed !important;
+    }
+    /* Eliminar cualquier contenedor blanco heredado de celdas */
+    div[data-testid="stDataFrame"] div, table * {
+        background-color: transparent !important;
+        color: #fef08a !important;
+    }
+    div[data-testid="stDataFrame"] th * {
+        color: #fde047 !important;
     }
 
     /* Inputs, textareas y botones */
@@ -292,6 +353,17 @@ with menu[0]:
     with st.form("registro_form", clear_on_submit=True):
         st.markdown("<h3 style='color: #fde047; margin-top: 0;'>Registrar una canción</h3>", unsafe_allow_html=True)
         
+        # Cuadro con lluvia de notas musicales animadas
+        st.markdown("""
+            <div class="rain-container">
+                <div class="note">🎵</div>
+                <div class="note">🎶</div>
+                <div class="note">🎼</div>
+                <div class="note">🎵</div>
+                <div class="note">🎶</div>
+            </div>
+        """, unsafe_allow_html=True)
+        
         autor = st.radio("¿Quién está registrando la canción?", ["Santiago 🐥(Para Tali)", "Taliana 💖(Para Puente)"])
         titulo = st.text_input("Título de la canción", placeholder="Ej. IMU")
         artista = st.text_input("Artista", placeholder="Ej. Jorge Cuellar")
@@ -311,6 +383,17 @@ with menu[1]:
     st.markdown('<div class="marco-contenido">', unsafe_allow_html=True)
     st.markdown("<h3 style='color: #fde047; margin-top: 0;'>Ver y escuchar nuestras listas</h3>", unsafe_allow_html=True)
     
+    # Cuadro con lluvia de notas musicales en la segunda pestaña también
+    st.markdown("""
+        <div class="rain-container">
+            <div class="note">🎵</div>
+            <div class="note">🎶</div>
+            <div class="note">🎼</div>
+            <div class="note">🎵</div>
+            <div class="note">🎶</div>
+        </div>
+    """, unsafe_allow_html=True)
+    
     filtro = st.radio("Filtrar Lista", ["Mis canciones 🐥(Dedicatorias para Tali)", "Mis canciones 💖(Dedicatorias para Puente)", "Ver todas juntas 🐥💖"])
     
     df = cargar_canciones()
@@ -329,12 +412,16 @@ with menu[1]:
             st.markdown("---")
             st.markdown("<h3 style='color: #fde047;'>Reproductor y detalles</h3>", unsafe_allow_html=True)
             
-            # Videocasete "Tu y Yo" en el centro
+            # Videocasete detallado "Tu y Yo"
             st.markdown("""
                 <div class="vhs-container">
                     <div class="vhs-tape">
-                        <div class="vhs-label">Tu y Yo</div>
-                        <div class="vhs-reels">
+                        <div class="vhs-screw screw-tl"></div>
+                        <div class="vhs-screw screw-tr"></div>
+                        <div class="vhs-screw screw-bl"></div>
+                        <div class="vhs-screw screw-br"></div>
+                        <div class="vhs-label">Tu y Yo 💖</div>
+                        <div class="vhs-window">
                             <div class="reel"></div>
                             <div class="reel"></div>
                         </div>

@@ -6,7 +6,6 @@ import requests
 # Configuración de la página
 st.set_page_config(page_title="Lista de Canciones 🐥💝", page_icon="🎵", layout="centered")
 
-# Tu ID de Google Sheet y la URL del Web App de Apps Script que me proporcionaste
 SHEET_ID = "1qjGA_JLcrJgDM8QUHTIdRsOszOukowgCtws-qZPpK"
 SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv"
 WEB_APP_URL = "https://script.google.com/macros/s/AKfycbww1XIydnPRQvIZbbecLhBaSD7c4OEQgyJa-wpXryeAk6XaT7YXcbR08SpICqptfQim/exec"
@@ -277,16 +276,20 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def cargar_canciones():
-    expected_cols = ["N°", "Autor", "Título", "Artista", "Fecha", "Enlace", "Mensaje"]
     try:
         df = pd.read_csv(SHEET_URL)
+        # Limpiamos nombres de columnas por si tienen espacios
+        df.columns = [c.strip() for c in df.columns]
+        
+        expected_cols = ["N°", "Autor", "Título", "Artista", "Fecha", "Enlace", "Mensaje"]
         for col in expected_cols:
             if col not in df.columns:
                 return pd.DataFrame(columns=expected_cols)
+        
         df = df.dropna(subset=["Título"])
         return df
     except Exception:
-        return pd.DataFrame(columns=expected_cols)
+        return pd.DataFrame(columns=["N°", "Autor", "Título", "Artista", "Fecha", "Enlace", "Mensaje"])
 
 def guardar_cancion(autor, titulo, artista, enlace, mensaje):
     colombia_tz = timezone(timedelta(hours=-5))
@@ -300,11 +303,22 @@ def guardar_cancion(autor, titulo, artista, enlace, mensaje):
         "enlace": enlace if enlace else "",
         "mensaje": mensaje if mensaje else ""
     }
-    
     try:
         requests.post(WEB_APP_URL, json=payload)
     except Exception as e:
         print(f"Error: {e}")
+
+def eliminar_cancion(num):
+    # En Google Sheets la fila real es N° + 1 (porque la fila 1 son los encabezados)
+    row_index = int(num) + 1
+    payload = {
+        "action": "delete",
+        "rowIndex": row_index
+    }
+    try:
+        requests.post(WEB_APP_URL, json=payload)
+    except Exception as e:
+        print(f"Error al eliminar: {e}")
 
 # Cabecera con Disco LP girando
 st.markdown("""
@@ -348,7 +362,7 @@ with menu[0]:
         if submitted:
             if titulo and artista:
                 guardar_cancion(autor, titulo, artista, enlace, mensaje)
-                st.success(f"¡Canción '{titulo}' registrada yeeei! Se ha guardado en tu Google Sheet para siempre ✨")
+                st.success(f"¡Canción '{titulo}' registrada con éxito y guardada para siempre en Google Sheets! ✨")
                 st.balloons()
                 st.rerun()
             else:
@@ -373,6 +387,7 @@ with menu[1]:
     df = cargar_canciones()
     
     if not df.empty:
+        # Filtrado por autor
         if "Ver todas" in filtro:
             df_filtrado = df
         elif "🐥" in filtro:
@@ -429,6 +444,12 @@ with menu[1]:
                 st.markdown(f"[Abrir enlace externo de audio]({link})")
             else:
                 st.info("Esta canción no tiene el link adjunto :(")
+                
+            st.markdown("---")
+            if st.button("Eliminar esta canción"):
+                eliminar_cancion(int(num_seleccionado))
+                st.warning(f"Canción N° {num_seleccionado} eliminada correctamente.")
+                st.rerun()
     else:
-        st.info("No hay canciones registradas todavía. ¡Registra la primera desde la pestaña de arriba!")
+        st.info("No hay canciones registradas todavía.")
     st.markdown('</div>', unsafe_allow_html=True)

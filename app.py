@@ -362,7 +362,7 @@ with menu[0]:
             </div>
         """, unsafe_allow_html=True)
         
-        autor = st.radio("¿Quién está registrando la canción?", ["Santiago 🐥(Para Tali)", "Taliana 💖(Para Puente)"])
+        autor = st.radio("¿Quién está registrando la canción?", ["Santiago 🐥", "Taliana 💖"])
         titulo = st.text_input("Título de la canción", placeholder="Ej. IMU")
         artista = st.text_input("Artista", placeholder="Ej. Jorge Cuellar")
         enlace = st.text_input("Enlace de YouTube (Opcional)", placeholder="Link de la canción")
@@ -440,7 +440,7 @@ with menu[1]:
                 <div class="{clase_tarjeta}">
                     <h3 style="margin: 0; color: #fde047;">{fila['Título']} — {fila['Artista']}</h3>
                     <p style="margin: 5px 0; color: #fef08a;"><b>Registrada por:</b> {fila['Autor']} | <b>Fecha:</b> {fila['Fecha']}</p>
-                    <p style="margin-top: 10px;"><b>Dedicatoria:</b> <i>"{fila['Mensaje'] if fila['Mensaje'] else 'Sin dedicatoria por escrito.'}"</i></p>
+                    <p style="margin-top: 10px;"><b>Dedicatoria:</b> <i>"{fila['Mensaje'] if fila['Mensaje'] else 'No tiene dedicatoria :(.'}"</i></p>
                 </div>
             """, unsafe_allow_html=True)
             
@@ -454,7 +454,7 @@ with menu[1]:
             elif link.strip() != "":
                 st.markdown(f"[Abrir enlace externo de audio]({link})")
             else:
-                st.info("Esta canción no cuenta con enlace adjunto.")
+                st.info("Esta canción no tiene el link adjunto :(")
                 
             st.markdown("---")
             if st.button("Eliminar esta canción"):
@@ -462,5 +462,5 @@ with menu[1]:
                 st.warning(res_del)
                 st.rerun()
     else:
-        st.info("Aún no hay canciones registradas en la lista.")
+        st.info("No hay canciones registradas en la lista.")
     st.markdown('</div>', unsafe_allow_html=True)

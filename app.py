@@ -8,7 +8,7 @@ DATA_FILE = "canciones_dedicadas.csv"
 # Configuración de la página
 st.set_page_config(page_title="Lista de Canciones 🐥💖", page_icon="🎵", layout="centered")
 
-# Estilos CSS con pestañas estilo Google, texto de ejemplo amarillo dorado y disco LP girando
+# Estilos CSS con pestañas estilo navegador y el marco general que dibujaste
 st.markdown("""
     <style>
     /* Fondo general morado */
@@ -71,7 +71,17 @@ st.markdown("""
         transform: translate(-50%, -50%);
     }
 
-    /* Cajas de texto con bordes dorados, fondo morado y texto de ejemplo (placeholder) en amarillo dorado */
+    /* Marco general que encierra el contenido (como lo dibujaste) */
+    .marco-contenido {
+        border: 3px solid #fde047;
+        border-radius: 0 0 15px 15px;
+        padding: 25px;
+        background-color: #240c50;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        margin-top: -10px;
+    }
+
+    /* Cajas de texto con bordes dorados, fondo morado y texto de ejemplo en amarillo dorado */
     .stTextInput > div > div > input, .stTextArea > div > div > textarea {
         background-color: #3b0764 !important;
         border: 2px solid #fde047 !important;
@@ -88,25 +98,24 @@ st.markdown("""
         color: #fde047 !important;
     }
 
-    /* Pestañas (Tabs) estilo Google con rebordeado dorado */
+    /* Pestañas (Tabs) estilo navegador Google con rebordeado dorado */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background-color: #1e1b4b;
-        padding: 10px;
-        border-radius: 12px 12px 0 0;
-        border-bottom: 2px solid #fde047;
+        gap: 5px;
+        background-color: transparent;
+        border-bottom: none;
     }
     .stTabs [data-baseweb="tab"] {
         background-color: #3b0764;
         border: 2px solid #fde047 !important;
-        border-radius: 8px 8px 0 0 !important;
+        border-bottom: none !important;
+        border-radius: 10px 10px 0 0 !important;
         color: #fde047 !important;
         font-weight: bold;
         padding: 10px 20px;
     }
     .stTabs [aria-selected="true"] {
-        background-color: #7c3aed !important;
-        border-bottom: 4px solid #fde047 !important;
+        background-color: #240c50 !important;
+        border-top: 4px solid #fde047 !important;
         color: #ffffff !important;
     }
 
@@ -193,15 +202,18 @@ st.markdown("""
         </div>
     </div>
     <h1 style="text-align: center; color: #fde047;">Lista de Canciones 🐥💖</h1>
-    <p style="text-align: center; color: #fde047; font-size: 16px; font-weight: 500;">
+    <p style="text-align: center; color: #fde047; font-size: 16px; font-weight: 500; margin-bottom: 25px;">
         Nuestra lista de canciones que nos hemos dedicado, esto quedará, hasta el final de la vida.
     </p>
 """, unsafe_allow_html=True)
 
 menu = st.tabs(["Registrar una canción", "Ver y escuchar nuestras listas"])
 
+# Abrimos el contenedor con el marco dorado que dibujaste
+st.markdown('<div class="marco-contenido">', unsafe_allow_html=True)
+
 with menu[0]:
-    st.markdown("<h3 style='color: #fde047;'>Registrar una canción</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color: #fde047; margin-top: 0;'>Registrar una canción</h3>", unsafe_allow_html=True)
     
     with st.form("registro_form", clear_on_submit=True):
         autor = st.radio("¿Quién está registrando la canción?", ["Santiago 🐥(Para Tali)", "Taliana 💖(Para Puente)"])
@@ -220,7 +232,7 @@ with menu[0]:
                 st.error("Por favor, llena al menos el título y el artista.")
 
 with menu[1]:
-    st.markdown("<h3 style='color: #fde047;'>Ver y escuchar nuestras listas</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color: #fde047; margin-top: 0;'>Ver y escuchar nuestras listas</h3>", unsafe_allow_html=True)
     filtro = st.radio("Filtrar Lista", ["Mis canciones 🐥(Dedicatorias para Tali)", "Mis canciones 💖(Dedicatorias para Puente)", "Ver todas juntas 🐥💖"])
     
     df = cargar_canciones()
@@ -271,3 +283,6 @@ with menu[1]:
                 st.rerun()
     else:
         st.info("Aún no hay canciones registradas en la lista.")
+
+# Cerramos el contenedor del marco dorado
+st.markdown('</div>', unsafe_allow_html=True)

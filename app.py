@@ -8,7 +8,7 @@ DATA_FILE = "canciones_dedicadas.csv"
 # Configuración de la página
 st.set_page_config(page_title="Lista de Canciones 🐥💖", page_icon="🎵", layout="centered")
 
-# Estilos CSS con pestañas estilo navegador y el marco general que dibujaste
+# Estilos CSS corregidos para el marco general y los campos de texto
 st.markdown("""
     <style>
     /* Fondo general morado */
@@ -71,17 +71,18 @@ st.markdown("""
         transform: translate(-50%, -50%);
     }
 
-    /* Marco general que encierra el contenido (como lo dibujaste) */
+    /* Marco general continuo que encierra todo el contenido de las pestañas */
     .marco-contenido {
         border: 3px solid #fde047;
-        border-radius: 0 0 15px 15px;
-        padding: 25px;
+        border-radius: 0 15px 15px 15px;
+        padding: 30px;
         background-color: #240c50;
         box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-        margin-top: -10px;
+        margin-top: -2px;
+        margin-bottom: 30px;
     }
 
-    /* Cajas de texto con bordes dorados, fondo morado y texto de ejemplo en amarillo dorado */
+    /* Cajas de texto (inputs y textareas) con fondo morado, bordes y textos dorados */
     .stTextInput > div > div > input, .stTextArea > div > div > textarea {
         background-color: #3b0764 !important;
         border: 2px solid #fde047 !important;
@@ -98,9 +99,9 @@ st.markdown("""
         color: #fde047 !important;
     }
 
-    /* Pestañas (Tabs) estilo navegador Google con rebordeado dorado */
+    /* Pestañas estilo navegador con rebordeado dorado */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 5px;
+        gap: 4px;
         background-color: transparent;
         border-bottom: none;
     }
@@ -209,7 +210,7 @@ st.markdown("""
 
 menu = st.tabs(["Registrar una canción", "Ver y escuchar nuestras listas"])
 
-# Abrimos el contenedor con el marco dorado que dibujaste
+# Abrimos el contenedor con el marco dorado continuo
 st.markdown('<div class="marco-contenido">', unsafe_allow_html=True)
 
 with menu[0]:

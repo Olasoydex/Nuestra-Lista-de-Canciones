@@ -182,7 +182,7 @@ st.markdown("""
         border-radius: 50%;
     }
 
-    /* Forzar que la tabla sea en morado suave sin fondo blanco */
+    /* Tabla en morado suave sin fondo blanco */
     div[data-testid="stDataFrame"], .stDataFrame, [data-testid="stTable"] {
         background-color: #4c1d95 !important;
         border: 2px solid #fde047 !important;
@@ -251,7 +251,7 @@ st.markdown("""
         box-shadow: 0 8px 25px rgba(0,0,0,0.4) !important;
     }
 
-    /* Pestañas (Tabs) estilo navegador con borde dorado */
+    /* Pestañas estilo navegador con borde dorado */
     .stTabs [data-baseweb="tab-list"] {
         gap: 5px;
         background-color: transparent;
@@ -397,10 +397,12 @@ with menu[1]:
     df = cargar_canciones()
     
     if not df.empty:
-        # CORRECCIÓN CLAVE EN EL FILTRADO
-        if "🐥" in filtro:
+        # LÓGICA DE FILTRADO CORREGIDA
+        if "Ver todas" in filtro:
+            df_filtrado = df
+        elif "🐥" in filtro:
             df_filtrado = df[df["Autor"].str.contains("Santiago", case=False, na=False)]
-        elif "💖" in filtro and "Ver todas" not in filtro:
+        elif "💖" in filtro:
             df_filtrado = df[df["Autor"].str.contains("Taliana", case=False, na=False)]
         else:
             df_filtrado = df

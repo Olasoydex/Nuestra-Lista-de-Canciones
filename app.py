@@ -276,20 +276,19 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def cargar_canciones():
+    expected_cols = ["N°", "Autor", "Título", "Artista", "Fecha", "Enlace", "Mensaje"]
     try:
         df = pd.read_csv(SHEET_URL)
-        # Limpiamos nombres de columnas por si tienen espacios
-        df.columns = [c.strip() for c in df.columns]
+        df.columns = [str(c).strip() for c in df.columns]
         
-        expected_cols = ["N°", "Autor", "Título", "Artista", "Fecha", "Enlace", "Mensaje"]
         for col in expected_cols:
             if col not in df.columns:
-                return pd.DataFrame(columns=expected_cols)
-        
+                df[col] = ""
+                
         df = df.dropna(subset=["Título"])
         return df
     except Exception:
-        return pd.DataFrame(columns=["N°", "Autor", "Título", "Artista", "Fecha", "Enlace", "Mensaje"])
+        return pd.DataFrame(columns=expected_cols)
 
 def guardar_cancion(autor, titulo, artista, enlace, mensaje):
     colombia_tz = timezone(timedelta(hours=-5))
@@ -309,7 +308,6 @@ def guardar_cancion(autor, titulo, artista, enlace, mensaje):
         print(f"Error: {e}")
 
 def eliminar_cancion(num):
-    # En Google Sheets la fila real es N° + 1 (porque la fila 1 son los encabezados)
     row_index = int(num) + 1
     payload = {
         "action": "delete",
@@ -362,7 +360,7 @@ with menu[0]:
         if submitted:
             if titulo and artista:
                 guardar_cancion(autor, titulo, artista, enlace, mensaje)
-                st.success(f"¡Canción '{titulo}' registrada con éxito y guardada para siempre en Google Sheets! ✨")
+                st.success(f"¡Canción '{titulo}' registrada con éxito y guardada en Google Sheets! ✨")
                 st.balloons()
                 st.rerun()
             else:
@@ -382,7 +380,7 @@ with menu[1]:
         </div>
     """, unsafe_allow_html=True)
     
-    filtro = st.radio("Filtrar Lista", ["Mis canciones 🐥(Dedicatorias para Tali)", "Mis canciones 💝(Dedicatorias para Puente)", "Ver todas juntas 🐥💝"])
+    filtro = st.radio("Filtrar Lista", ["Mis canciones 🐥 (Dedicatorias para Tali)", "Mis canciones 💝 (Dedicatorias para Puente)", "Ver todas juntas 🐥💝"])
     
     df = cargar_canciones()
     
@@ -397,9 +395,9 @@ with menu[1]:
         else:
             df_filtrado = df
             
-        st.dataframe(df_filtrado[["N°", "Autor", "Título", "Artista", "Fecha"]], use_container_width=True)
-        
         if not df_filtrado.empty:
+            st.dataframe(df_filtrado[["N°", "Autor", "Título", "Artista", "Fecha"]], use_container_width=True)
+            
             st.markdown("---")
             st.markdown("<h3 style='color: #fde047;'>Reproductor y detalles</h3>", unsafe_allow_html=True)
             
@@ -425,15 +423,16 @@ with menu[1]:
             
             clase_tarjeta = "card-yellow" if "Santiago" in str(fila['Autor']) else "card-purple"
             
+            # Tarjeta limpia sin mostrar el mensaje ni el enlace escrito
             st.markdown(f"""
                 <div class="{clase_tarjeta}">
                     <h3 style="margin: 0; color: #fde047;">{fila['Título']} — {fila['Artista']}</h3>
-                    <p style="margin: 5px 0; color: #fef08a;"><b>Registrada por:</b> {fila['Autor']} | <b>Fecha:</b> {fila['Fecha']}</p>
-                    <p style="margin-top: 10px;"><b>Dedicatoria:</b> <i>"{fila['Mensaje'] if str(fila['Mensaje']).strip() != '' else 'No tiene dedicatoria :(.'}"</i></p>
+                    <p style="margin: 5px 0 0 0; color: #fef08a;"><b>Registrada por:</b> {fila['Autor']} | <b>Fecha:</b> {fila['Fecha']}</p>
                 </div>
             """, unsafe_allow_html=True)
             
-            link = str(fila["Enlace"])
+            # Reproductor o enlace externo limpio
+            link = str(fila["Enlace"]) if pd.notna(fila["Enlace"]) else ""
             if "youtube.com/watch?v=" in link:
                 yt_id = link.split("v=")[1].split("&")[0]
                 st.video(f"https://www.youtube.com/watch?v={yt_id}")
@@ -450,6 +449,8 @@ with menu[1]:
                 eliminar_cancion(int(num_seleccionado))
                 st.warning(f"Canción N° {num_seleccionado} eliminada correctamente.")
                 st.rerun()
+        else:
+            st.info("No hay canciones para este filtro todavía.")
     else:
-        st.info("No hay canciones registradas todavía.")
+        st.info("No hay canciones registradas todavía. ¡Registra la primera desde la pestaña de arriba!")
     st.markdown('</div>', unsafe_allow_html=True)

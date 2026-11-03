@@ -6,7 +6,7 @@ from datetime import datetime
 DATA_FILE = "canciones_dedicadas.csv"
 
 # Configuración de la página
-st.set_page_config(page_title="Lista de Canciones 🐥💖", page_icon="🎵", layout="centered")
+st.set_page_config(page_title="Lista de Canciones 🐥♥", page_icon="🎵", layout="centered")
 
 # Estilos CSS
 st.markdown("""
@@ -339,7 +339,7 @@ st.markdown("""
             </div>
         </div>
     </div>
-    <h1 style="text-align: center; color: #fde047;">Lista de Canciones 🐥💖</h1>
+    <h1 style="text-align: center; color: #fde047;">Lista de Canciones 🐥♥</h1>
     <p style="text-align: center; color: #fde047; font-size: 16px; font-weight: 500; margin-bottom: 25px;">
         Nuestra lista de canciones que nos hemos dedicado, esto quedará, hasta el final de la vida.
     </p>
@@ -362,7 +362,7 @@ with menu[0]:
             </div>
         """, unsafe_allow_html=True)
         
-        autor = st.radio("¿Quién está registrando la canción?", ["Santiago 🐥", "Taliana 💖"])
+        autor = st.radio("¿Quién está registrando la canción?", ["Santiago 🐥", "Taliana ♥"])
         titulo = st.text_input("Título de la canción", placeholder="Ej. IMU")
         artista = st.text_input("Artista", placeholder="Ej. Jorge Cuellar")
         enlace = st.text_input("Enlace de YouTube (Opcional)", placeholder="Link de la canción")
@@ -392,7 +392,7 @@ with menu[1]:
         </div>
     """, unsafe_allow_html=True)
     
-    filtro = st.radio("Filtrar Lista", ["Mis canciones 🐥(Dedicatorias para Tali)", "Mis canciones 💖(Dedicatorias para Puente)", "Ver todas juntas 🐥💖"])
+    filtro = st.radio("Filtrar Lista", ["Mis canciones 🐥(Dedicatorias para Tali)", "Mis canciones ♥(Dedicatorias para Puente)", "Ver todas juntas 🐥♥"])
     
     df = cargar_canciones()
     
@@ -402,7 +402,7 @@ with menu[1]:
             df_filtrado = df
         elif "🐥" in filtro:
             df_filtrado = df[df["Autor"].str.contains("Santiago", case=False, na=False)]
-        elif "💖" in filtro:
+        elif "♥" in filtro:
             df_filtrado = df[df["Autor"].str.contains("Taliana", case=False, na=False)]
         else:
             df_filtrado = df
@@ -421,7 +421,7 @@ with menu[1]:
                         <div class="vhs-screw screw-tr"></div>
                         <div class="vhs-screw screw-bl"></div>
                         <div class="vhs-screw screw-br"></div>
-                        <div class="vhs-label">Tu y Yo 💖</div>
+                        <div class="vhs-label">Tu y Yo ♥</div>
                         <div class="vhs-window">
                             <div class="reel"></div>
                             <div class="reel"></div>

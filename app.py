@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import streamlit as st
 from datetime import datetime
+import pytz
 
 DATA_FILE = "canciones_dedicadas.csv"
 
@@ -309,7 +310,10 @@ def cargar_canciones():
 
 def guardar_cancion(autor, titulo, artista, enlace, mensaje):
     df = cargar_canciones()
-    fecha_actual = datetime.now().strftime("%d/%m/%Y %H:%M")
+    
+    # Configurar la zona horaria de Colombia (Bogota) para guardar hora exacta con AM/PM
+    tz_colombia = pytz.timezone('America/Bogota')
+    fecha_actual = datetime.now(tz_colombia).strftime("%d/%m/%Y %I:%M %p")
     
     nueva_fila = pd.DataFrame([[0, autor, titulo, artista, fecha_actual, enlace if enlace else "", mensaje if mensaje else ""]], 
                               columns=["N°", "Autor", "Título", "Artista", "Fecha", "Enlace", "Mensaje"])
